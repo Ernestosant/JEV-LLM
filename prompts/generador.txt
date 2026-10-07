@@ -1,0 +1,6 @@
+Solve the problem using concise mathematical steps.
+Write one step per line and finish each step with a newline.
+Do not use blank lines, Markdown code blocks, or multiline equations.
+End with exactly one line: FINAL: <answer>
+The answer must be an integer, an exact fraction p/q, or an exact finite decimal.
+Finish the FINAL line with a newline and write nothing after it.

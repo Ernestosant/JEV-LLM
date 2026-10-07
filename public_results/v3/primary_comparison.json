@@ -1,0 +1,65 @@
+{
+  "quality": {
+    "ci95_descriptive": [
+      7.866666666666666,
+      13.666666666666666
+    ],
+    "ci97_5_bonferroni": [
+      7.533333333333333,
+      14.133333333333333
+    ],
+    "n_problems": 500,
+    "n_clusters": 500,
+    "n_boot": 10000,
+    "seed": 271828,
+    "strata": {
+      "algebra": 100,
+      "arithmetic": 100,
+      "counting_probability": 100,
+      "number_theory": 100,
+      "ratios_percentages": 100
+    },
+    "bootstrap_method": "approximate paired domain-stratified problem-cluster percentile",
+    "method": "JFINAL",
+    "baseline": "B13_GREEDY",
+    "acc_diff_pp": 10.733333333333333,
+    "method_accuracy_pct": 94.73333333333332,
+    "baseline_accuracy_pct": 84.0
+  },
+  "latency": {
+    "ci95_descriptive": [
+      0.8966244257756351,
+      1.1120552296218766
+    ],
+    "ci97_5_bonferroni": [
+      0.883867813624088,
+      1.1264255001970094
+    ],
+    "n_problems": 100,
+    "n_clusters": 100,
+    "n_boot": 10000,
+    "seed": 271828,
+    "strata": {
+      "algebra": 20,
+      "arithmetic": 20,
+      "counting_probability": 20,
+      "number_theory": 20,
+      "ratios_percentages": 20
+    },
+    "bootstrap_method": "approximate paired domain-stratified problem-cluster percentile",
+    "speedup": 1.0019249359248121,
+    "n_records": 1800,
+    "estimand": "exp(mean(log(median9(T_B13_GREEDY) / median9(T_JFINAL))))",
+    "status_counts": {
+      "JFINAL": {
+        "final": 887,
+        "truncated": 13
+      },
+      "B13_GREEDY": {
+        "final": 864,
+        "truncated": 36
+      }
+    },
+    "practical_point_10pct_reduction": false
+  }
+}

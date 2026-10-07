@@ -1,0 +1,17 @@
+{
+  "protocol": "protocolo_jev_qwen4b_v2.md section 8: development-only 0.8B graph diagnostic",
+  "protocol_version": "3.1-diagnostic",
+  "implementation_profile": "SHARED4-VLLM-GRAPH",
+  "models": {
+    "G": {"repo": "Qwen/Qwen3.5-0.8B", "revision": "2fc06364715b967f1860aea9cf38778875588b17"},
+    "J": {"repo": "alibiserikbay/JevK5-9B", "revision": "d6521a18a86999190e9d775c915af3d6d6772fc4"},
+    "B": {"repo": "DavidAU/Qwen3.5-13B-GLM-4.7-Flash-DeepSeek-Polaris-Grande-Deep-Thinking", "revision": "717b561ac319a0ba9f9a0b1ed30dca2e1cc6c6fe"}
+  },
+  "jevk5_runtime": {"git": "https://github.com/allebee/jevk5", "tag": "v0.3.0", "commit": "6c6522fe5462a05fdb82bceeb0e8c624c11f1517"},
+  "runtime_defaults": {"KV_CACHE_GB_G": 2.0, "REQUIRED_GPU": "A100"},
+  "hardware": {"gpu": "A100", "memory_gib_range": [39, 41], "generator_max_num_seqs": 1},
+  "selector": {"calibration_temperature_expected": 1.316},
+  "seeds": {"minimal": [17], "planning": 20261001, "bootstrap": 271828},
+  "conditions": ["G_SINGLE"],
+  "condition_labels": {"G_SINGLE": "Qwen3.5-0.8B on A100: development-only graph/eager diagnostic"}
+}

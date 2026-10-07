@@ -1,0 +1,36 @@
+{
+  "protocol": "protocolo_jev_qwen4b_v3.md",
+  "protocol_version": "3",
+  "code_version": "0.3.0",
+  "implementation_profile": "1COPY-G4-VLLM-GRAPH-V3",
+  "models": {
+    "G": {"repo": "Qwen/Qwen3.5-4B", "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"},
+    "J": {"repo": "alibiserikbay/JevK5-9B", "revision": "d6521a18a86999190e9d775c915af3d6d6772fc4"},
+    "B": {"repo": "DavidAU/Qwen3.5-13B-GLM-4.7-Flash-DeepSeek-Polaris-Grande-Deep-Thinking", "revision": "717b561ac319a0ba9f9a0b1ed30dca2e1cc6c6fe"},
+    "O": {"repo": "Qwen/Qwen3.5-9B", "revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a"}
+  },
+  "jevk5_runtime": {"git": "https://github.com/allebee/jevk5", "tag": "v0.3.0", "commit": "6c6522fe5462a05fdb82bceeb0e8c624c11f1517"},
+  "software_pins": {"vllm": "0.30.0", "note": "Exact resolved packages and engine options are recorded before measurement"},
+  "hardware": {"gpu": "A100", "memory_gib_range": [39, 41], "generator_copies": 1, "generator_max_num_seqs": 4, "dtype": "bfloat16", "max_assignments": 2},
+  "runtime_defaults": {"N_PROBLEMS": 500, "SEEDS": "17,29,43", "MAX_OUTPUT_TOKENS": 2048, "CANDIDATE_BUDGET": 8192, "MAX_PROMPT_TOKENS": 1024, "GB_CONTEXT": 4096, "J_MAX_INPUT": 16384, "TIMEOUT_S": 600, "KV_CACHE_GB_G": 3.0, "KV_CACHE_GB_J": 4.0, "KV_CACHE_GB_B": 3.0, "KV_CACHE_GB_O": 3.0, "REQUIRED_GPU": "A100", "ENFORCE_EAGER": false, "LAT_N_ITEMS": 100, "LAT_REPETITIONS": 3, "LAT_CONDITIONS": "JFINAL,B13_GREEDY", "LATENCY_SWAP_MODE": "reload"},
+  "sampling": {"temperature": 0.7, "top_p": 0.9, "top_k": 0, "repetition_penalty": 1.0, "presence_penalty": 0.0, "frequency_penalty": 0.0, "enable_thinking": false},
+  "limits": {"n_candidates": 4, "max_output_tokens": 2048, "hybrid_candidate_budget": 8192, "gb_context": 4096, "j_max_input": 16384, "max_prompt_tokens": 1024, "timeout_s": 600},
+  "selector": {"calibration_temperature_expected": 1.316, "option_ids": ["option_0", "option_1", "option_2", "option_3"], "readout": "raw A-D logits; softmax(logits/1.316); first displayed maximum"},
+  "seeds": {"stochastic": [17, 29, 43], "greedy_reference": [17], "planning": 20261002, "latency": 20261003, "bootstrap": 271828},
+  "conditions": ["G_SINGLE", "G_GREEDY", "JFINAL", "B13", "B13_GREEDY", "Q9_GREEDY"],
+  "condition_labels": {
+    "G_SINGLE": "Qwen3.5-4B solo: una solucion con muestreo",
+    "G_GREEDY": "Qwen3.5-4B solo: una solucion greedy",
+    "JFINAL": "4B + JevK5-9B: seleccion entre cuatro soluciones completas",
+    "B13": "Modelo de aproximadamente 13B: una solucion con muestreo",
+    "B13_GREEDY": "Modelo de aproximadamente 13B: una solucion greedy (ancla principal)",
+    "Q9_GREEDY": "Qwen3.5-9B oficial: una solucion greedy"
+  },
+  "dataset": {"version": "v3", "test_count": 500, "pilot_count": 50, "dev_count": 20, "language": "en", "domains": ["arithmetic", "algebra", "ratios_percentages", "number_theory", "counting_probability"], "test_per_domain": {"easy": 30, "medium": 40, "hard": 30}, "pilot_per_domain": {"easy": 3, "medium": 4, "hard": 3}, "latency_per_domain": {"easy": 6, "medium": 8, "hard": 6}, "max_abs_answer": 1000000000, "answer_type": "exact rational", "review": "two actual blind agent reviews plus separate source comparison", "human_reviewed": false},
+  "dataset_review_policy": {"id": "jev-v3-source-sampling-tier-agent-review-20261004", "sha256": "4ad2d4bbae07425864bcaa3fa5c99f8aa140c8feeaf902955a6bc8041c5689cb"},
+  "dataset_sampling": {"quota_axis": "source_sampling_tier", "reviewed_domain_counts": {"arithmetic": 100, "algebra": 100, "ratios_percentages": 100, "number_theory": 100, "counting_probability": 100}, "source_tier_per_domain": {"easy": 30, "medium": 40, "hard": 30}, "intrinsic_difficulty": "independently reviewed and reported; not forced to source-tier quotas", "latency_source_tier_per_domain": {"easy": 6, "medium": 8, "hard": 6}},
+  "analysis": {"bootstrap_resamples": 10000, "bootstrap_seed": 271828, "unit": "problem cluster", "ci_descriptive": 0.95, "ci_coprimary": 0.975, "primary_quality": ["JFINAL", "B13_GREEDY"], "primary_latency": ["JFINAL", "B13_GREEDY"], "latency_estimator": "exp(mean(log(median_time_B_by_problem / median_time_J_by_problem)))", "secondary_comparisons": [["JFINAL", "G_SINGLE"], ["JFINAL", "VOTE4SHARED"], ["G_GREEDY", "Q9_GREEDY"], ["JFINAL", "Q9_GREEDY"], ["G_SINGLE", "B13"]], "secondary_pvalues": "approximate centered domain-stratified problem-cluster bootstrap", "secondary_adjustment": "Holm", "practical_accuracy_pp": 5.0, "practical_time_reduction": 0.1},
+  "proposal_policy": {"seed_namespace": "G4_FINAL4_V3", "branches": [0, 1, 2, 3], "first_candidate": 0, "vote_eligibility": "terminal final with strict rational format; no gold", "vote_tie": "lowest original branch represented", "all_invalid_vote": "branch 0; normal strict scoring", "persist_before_selector": true},
+  "latency": {"items": 100, "seeds": [17, 29, 43], "temporal_repetitions": 3, "conditions": ["JFINAL", "B13_GREEDY"], "expected_rows": 1800, "same_gpu_required": true, "swap_mode": "reload", "lifecycle_outside_case_timer": true},
+  "execution": {"experiment_id": "jev-llm-v3-20261003", "max_gpu_hours_all_phases": 25, "max_assignments": 2, "operator_deadline_seconds": 14400, "ws_ping_seconds": 15, "backend_check_seconds": 20, "poll_seconds": 25, "guard_recovery_seconds": 180, "confirmatory_budget_approval_required": true, "pilot_gate": "technical only; no quality-win rule"}
+}

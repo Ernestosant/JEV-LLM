@@ -1,0 +1,39 @@
+{
+  "protocol": "protocolo_jev_qwen4b_v2.md",
+  "protocol_version": "2",
+  "implementation_profile": "1COPY-G4-VLLM-GRAPH",
+  "models": {
+    "G": {"repo": "Qwen/Qwen3.5-4B", "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"},
+    "J": {"repo": "alibiserikbay/JevK5-9B", "revision": "d6521a18a86999190e9d775c915af3d6d6772fc4"},
+    "B": {"repo": "DavidAU/Qwen3.5-13B-GLM-4.7-Flash-DeepSeek-Polaris-Grande-Deep-Thinking", "revision": "717b561ac319a0ba9f9a0b1ed30dca2e1cc6c6fe"}
+  },
+  "jevk5_runtime": {"git": "https://github.com/allebee/jevk5", "tag": "v0.3.0", "commit": "6c6522fe5462a05fdb82bceeb0e8c624c11f1517"},
+  "software_pins": {"vllm": "0.30.0", "note": "torch/transformers resolved by vllm; exact pip freeze stored in manifests"},
+  "runtime_defaults": {"KV_CACHE_GB_G": 3.0, "KV_CACHE_GB_J": 4.0, "KV_CACHE_GB_B": 3.0, "REQUIRED_GPU": "A100", "ENFORCE_EAGER": false, "LATENCY_SWAP_MODE": "reload"},
+  "hardware": {"gpu": "A100", "memory_gib_range": [39, 41], "generator_copies": 1, "generator_max_num_seqs": 4, "dtype": "bfloat16"},
+  "sampling": {"temperature": 0.7, "top_p": 0.9, "top_k": 0, "repetition_penalty": 1.0, "presence_penalty": 0.0, "frequency_penalty": 0.0, "enable_thinking": false},
+  "limits": {"n_candidates": 4, "max_output_tokens": 1024, "hybrid_candidate_budget": 4096, "j64_block": 64, "jstep_step": 128, "jstep_max_rounds": 64, "gb_context": 4096, "j_max_input": 16384, "max_prompt_tokens": 512, "timeout_s": 600},
+  "selector": {"calibration_temperature_expected": 1.316, "option_ids": ["option_0", "option_1", "option_2", "option_3"], "readout": "letter logits A-D via vLLM logprobs, softmax(logit/T)"},
+  "seeds": {"minimal": [17], "recommended": [17], "planning": 20261001, "bootstrap": 271828},
+  "analysis": {"bootstrap_resamples": 10000, "ci_descriptive": 0.95, "primary_comparison": ["JFINAL", "B13"], "secondary_comparisons": [["J64", "B13"], ["JSTEP", "B13"], ["J64", "G_SINGLE"], ["JSTEP", "G_SINGLE"], ["JFINAL", "G_SINGLE"]], "secondary_adjustment": "Holm exact two-sided McNemar p-values", "secondary_ci_simultaneous": 0.99, "secondary_ci_method": "conservative Bonferroni bootstrap intervals", "thresholds": {"accuracy_pp": 5.0}, "latency": "secondary descriptive"},
+  "conditions": ["G_SINGLE", "B13", "B13_GREEDY", "J64", "JSTEP", "JFINAL"],
+  "condition_aliases": {"G4_SINGLE": "G_SINGLE", "J64_G4": "J64", "JSTEP_G4": "JSTEP", "JFINAL_G4": "JFINAL"},
+  "condition_labels": {
+    "G_SINGLE": "Qwen3.5-4B alone: one sampled solution",
+    "B13": "Approximately 13B baseline: one sampled solution (anchor)",
+    "B13_GREEDY": "Approximately 13B baseline: one greedy solution (sensitivity control)",
+    "J64": "4B + JevK5-9B: select among four continuations every 64 tokens",
+    "JSTEP": "4B + JevK5-9B: select among four step continuations",
+    "JFINAL": "4B + JevK5-9B: select among four complete solutions"
+  },
+  "code_version": "0.2.1",
+  "amendment": {
+    "date": "2026-09-30",
+    "approved_by": "user",
+    "reason": "Latency smoke OOM with sleep-based swapping; quality smokes passed and no pilot has run.",
+    "change": "Unload all engines and confirm process exit before reloading only B or G4+J on the SAME A100 40 GB. No sleeping resident models or CPU offload. Close J for G_SINGLE and rebuild/probe it before hybrids when SLEEP_J_FOR_G_SINGLE is enabled.",
+    "timing": "Downloads, verification, loads, unloads, selector probes and warmup are outside T_total; swaps.jsonl records lifecycle time and memory separately.",
+    "unchanged": "All six arms, weights/revisions, BF16, graph mode, prompts, algorithms, KV G3/J4/B3 GiB, one G4 engine with max_num_seqs=4, 20 dev plus 12 synthetics and seed 17 (192 measured cases).",
+    "preservation": "experiment_v2.json, frozen 0.2.0 bundles and all previous smoke artifacts remain unchanged; this amendment has a new config hash."
+  }
+}

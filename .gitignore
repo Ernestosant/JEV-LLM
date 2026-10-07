@@ -1,0 +1,79 @@
+# Publish an explicit project allowlist, not the experimental workstation.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/config/
+!/data/
+!/docs/
+!/notebooks/
+!/prompts/
+!/public_results/
+!/src/
+!/tests/
+!/tools/
+!/protocolo_jev_qwen_v3.md
+!/protocolo_jev_qwen4b_v2.md
+!/protocolo_jev_qwen4b_v3.md
+
+# This local-evidence test embeds a real hardware/phase identifier.
+/tests/test_operational_latency_auditor_v3.py
+
+# Keep preparation code, not downloaded corpora, gold, reviews or tokenizers.
+/data/*
+!/data/*.py
+
+# Only unexecuted source notebooks from the final round.
+/notebooks/*
+!/notebooks/v3/
+/notebooks/v3/*
+!/notebooks/v3/postpilot/
+/notebooks/v3/postpilot/*
+!/notebooks/v3/postpilot/*.ipynb
+
+# Public results are separately curated, not copied from operation logs.
+/public_results/*
+!/public_results/v3/
+
+# Caches, environments, generated artifacts and local agent settings.
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.ipynb_checkpoints/
+**/.venv*/
+**/venv/
+**/env/
+**/.opencode/
+**/.claude/
+**/.atl/
+*.py[cod]
+*.log
+*.jsonl
+*.zip
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.out.*.ipynb
+*.pending
+*.tmp
+
+# Never publish environment files, credentials, session stores or key material.
+**/.env
+**/.env.*
+*.env
+*.env.*
+**/credentials*
+**/client_secret*
+**/sessions.json
+**/token.json
+**/token_*.json
+**/oauth*.json
+**/auth.json
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
