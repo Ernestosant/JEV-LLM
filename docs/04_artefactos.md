@@ -1,45 +1,47 @@
-# Artefactos de resultados
+# Result Artifacts
 
-Cada notebook de condición escribe en `/content/jev_llm/results/<COND>/<COND>_<RUN_TAG>_<hash8>/` y empaqueta
-todo en `/content/jev_llm/results/<run_name>_checkpoint.zip` (cada `CHECKPOINT_EVERY` casos) y `_final.zip`.
-Todas las líneas JSONL se escriben con `flush + fsync` (sobreviven a desconexiones).
+> Historical context: this document describes the legacy 0.8B experiment, not the completed v3 study. See [v3 results](13_results_v3.md) and [limitations and future work](14_limitations_and_future_work.md).
 
-| Archivo | Una fila por | Campos principales |
+Each condition notebook writes to `/content/jev_llm/results/<COND>/<COND>_<RUN_TAG>_<hash8>/` and packages
+everything into `/content/jev_llm/results/<run_name>_checkpoint.zip` (every `CHECKPOINT_EVERY` cases) and `_final.zip`.
+All JSONL lines are written with `flush + fsync` (they survive disconnections).
+
+| File | One Row per | Main Fields |
 |---|---|---|
-| `manifest.json` | corrida | `config` (parámetros semánticos, modelos, runtime, hashes de prompts/datos, perfil, `code_version`), `config_hash`, `environment` (GPU nombre/UUID/driver, host, CPU, RAM, disco, versiones), `hw_probe`, `model_lock` (repo, revisión, verificación, parámetros), `tokens` (EOS, conjunto `\n`), `memory_static` (NVML antes/después, procesos, extracto del log de vLLM, kwargs de motores), `selector` (T, IDs de letras, readout), `preflight` (resumen), `stages` (duración/ok/error), `counts` |
-| `predictions.jsonl` | caso (problema × semilla) | `resume_key`, `problem_id`, `seed`, `condition`, `profile`, `status` (`final`, `eos_invalid`, `truncated`, `max_rounds`, `timeout`, `selector_context_limit`, `exception`), `public_output` (cortado tras la línea FINAL), `raw_output`, `t_start_utc`, `t_end_utc` — **sin gold** |
-| `metrics.jsonl` | caso | todo lo anterior salvo textos + `T_total`, `T_first_accepted`, `T_proposals`, `T_selector`, `T_prefill`, `T_control`, `T_cache_sync` (0, N/A en vLLM), `prompt_tokens`, `candidate_tokens_total`, `accepted_tokens`, `overproduction_tokens`, `public_overproduction_chars`, `rounds`, `selector_calls`, `selector_input_tokens`, `processed_prompt_tokens`, `duplicate_rounds`, `empty_steps`, `forced_boundaries`, `boundary_overshoots`, `discarded_fraction`, `nvml_peak_used_bytes`, `nvml_hz`, `rss_gib`, `tokenizer` |
-| `candidates.jsonl` | candidato (ronda × rama) | `round`, `branch`, `seed_branch`, `limit`, `shown_position`, `chosen`, `text` (lo que vio J), `raw_text`, `n_tokens_delivered`, `n_sampled` (incluye EOS), `finish_reason`, `stop_reason`, `eos`, `terminal`, `has_final`, `terminal_reason`, `overproduction_tokens/chars`, `replacement_chars`, `boundary`, `boundary_overshoot`, `forced_boundary`, `empty_step`, `t_add/t_first/t_end` |
-| `decisions.jsonl` | llamada a J | `round`, `perm_seed`, `permutation` (pos→rama), `prefix_tokens`, `n_unique_candidates`, `input_tokens`, `option_chars`, `logits` (A–D crudos), `probabilities` (calibradas), `winner_position`, `winner_branch`, `exact_tie`, `status`, `engine_s`, `wall_s`, `tokenize_s` |
-| `rounds.jsonl` | ronda híbrida | `limit`, `round_sampled`, `accepted_after`, `candidates_total_after`, `T_proposals`, `T_selector`, `winner_branch`, `winner_terminal` |
-| `memory.jsonl` | caso | pico NVML en la ventana del caso, uso actual |
-| `failures.jsonl` | incidente | `kind` (`exception`, `infrastructure`, `run_aborted`), error, traceback, memoria GPU en el momento |
-| `events.jsonl` | evento | inicio/fin de etapas con duración y traceback si falla |
-| `warmup.jsonl` | caso de calentamiento | métricas de dev (no son resultados) |
-| `preflight/` | — | `summary.json`, `lock_<ROL>.json` (hash por archivo vs Hub), `rendered_template_<ROL>.txt`, `native_ref_{in,out}.json`, `native_ref_stderr.txt`, `hw_probe.json` |
-| `logs/run.log` | — | log legible (DEBUG por ronda, INFO por caso/etapa) |
-| `logs/vllm.log` | — | log de todos los procesos EngineCore (carga, KV, grafos, errores) |
-| `progress.json` | — | `done/total`, ETA, memoria GPU, nº de fallos (también en `/content/jev_llm/results/progress_<COND>.json`) |
-| `pip_freeze.txt` | — | entorno exacto |
+| `manifest.json` | run | `config` (semantic parameters, models, runtime, prompt/data hashes, profile, `code_version`), `config_hash`, `environment` (GPU name/UUID/driver, host, CPU, RAM, disk, versions), `hw_probe`, `model_lock` (repo, revision, verification, parameters), `tokens` (EOS, `\n` set), `memory_static` (NVML before/after, processes, vLLM log excerpt, engine kwargs), `selector` (T, letter IDs, readout), `preflight` (summary), `stages` (duration/ok/error), `counts` |
+| `predictions.jsonl` | case (problem × seed) | `resume_key`, `problem_id`, `seed`, `condition`, `profile`, `status` (`final`, `eos_invalid`, `truncated`, `max_rounds`, `timeout`, `selector_context_limit`, `exception`), `public_output` (cut after the FINAL line), `raw_output`, `t_start_utc`, `t_end_utc` — **without gold** |
+| `metrics.jsonl` | case | all the above except text + `T_total`, `T_first_accepted`, `T_proposals`, `T_selector`, `T_prefill`, `T_control`, `T_cache_sync` (0, N/A in vLLM), `prompt_tokens`, `candidate_tokens_total`, `accepted_tokens`, `overproduction_tokens`, `public_overproduction_chars`, `rounds`, `selector_calls`, `selector_input_tokens`, `processed_prompt_tokens`, `duplicate_rounds`, `empty_steps`, `forced_boundaries`, `boundary_overshoots`, `discarded_fraction`, `nvml_peak_used_bytes`, `nvml_hz`, `rss_gib`, `tokenizer` |
+| `candidates.jsonl` | candidate (round × branch) | `round`, `branch`, `seed_branch`, `limit`, `shown_position`, `chosen`, `text` (what J saw), `raw_text`, `n_tokens_delivered`, `n_sampled` (includes EOS), `finish_reason`, `stop_reason`, `eos`, `terminal`, `has_final`, `terminal_reason`, `overproduction_tokens/chars`, `replacement_chars`, `boundary`, `boundary_overshoot`, `forced_boundary`, `empty_step`, `t_add/t_first/t_end` |
+| `decisions.jsonl` | J call | `round`, `perm_seed`, `permutation` (position→branch), `prefix_tokens`, `n_unique_candidates`, `input_tokens`, `option_chars`, `logits` (raw A–D), `probabilities` (calibrated), `winner_position`, `winner_branch`, `exact_tie`, `status`, `engine_s`, `wall_s`, `tokenize_s` |
+| `rounds.jsonl` | hybrid round | `limit`, `round_sampled`, `accepted_after`, `candidates_total_after`, `T_proposals`, `T_selector`, `winner_branch`, `winner_terminal` |
+| `memory.jsonl` | case | peak NVML during the case window, current usage |
+| `failures.jsonl` | incident | `kind` (`exception`, `infrastructure`, `run_aborted`), error, traceback, GPU memory at the time |
+| `events.jsonl` | event | stage start/end with duration and traceback on failure |
+| `warmup.jsonl` | warm-up case | dev metrics (not results) |
+| `preflight/` | — | `summary.json`, `lock_<ROL>.json` (per-file hash vs Hub), `rendered_template_<ROL>.txt`, `native_ref_{in,out}.json`, `native_ref_stderr.txt`, `hw_probe.json` |
+| `logs/run.log` | — | readable log (DEBUG per round, INFO per case/stage) |
+| `logs/vllm.log` | — | log of all EngineCore processes (loading, KV, graphs, errors) |
+| `progress.json` | — | `done/total`, ETA, GPU memory, number of failures (also in `/content/jev_llm/results/progress_<COND>.json`) |
+| `pip_freeze.txt` | — | exact environment |
 
-**Notebook 08 (`results/LATENCY/...`)**: `latency_metrics.jsonl` (mismo esquema de métricas + `item_id`, `kind`
-[`dev` / `synthetic_<banda>`], `block`, `phase`), `latency_plan.json` (ítems y bloques), `swaps.jsonl` (duración de
-cada intercambio B↔G+J y memoria), `warmup.jsonl`.
+**Notebook 08 (`results/LATENCY/...`)**: `latency_metrics.jsonl` (same metrics schema + `item_id`, `kind`
+[`dev` / `synthetic_<banda>`], `block`, `phase`), `latency_plan.json` (items and blocks), `swaps.jsonl` (duration of
+each B↔G+J swap and memory), `warmup.jsonl`.
 
-**Notebook 07 (`analysis_<RUN_TAG>/`)**: `report.md`, `final_table.csv` (tabla §16), `graded_runs.csv` (una fila por
-caso con categoría de resultado y todas las métricas), `categories.csv`, `accuracy_by_domain_difficulty.csv`,
-`analysis.json` (comparaciones bootstrap, diagnóstico JFINAL, estadísticas del selector y de pasos, latencia 08),
+**Notebook 07 (`analysis_<RUN_TAG>/`)**: `report.md`, `final_table.csv` (§16 table), `graded_runs.csv` (one row per
+case with outcome category and all metrics), `categories.csv`, `accuracy_by_domain_difficulty.csv`,
+`analysis.json` (bootstrap comparisons, JFINAL diagnostic, selector and step statistics, latency 08),
 `figures/*.png`.
 
-## Categorías de resultado (§11)
+## Outcome Categories (§11)
 
-`correct`, `wrong_answer`, `invalid_format` (FINAL presente pero no parseable), `no_final`, `multiple_final`,
-`truncated` (límite sin terminar, incl. `max_rounds`), `eos_without_final`, `timeout`, `selector_context_limit`,
-`exception`. Todas salvo `correct` cuentan como incorrectas; ningún problema se retira del denominador.
+`correct`, `wrong_answer`, `invalid_format` (FINAL present but not parseable), `no_final`, `multiple_final`,
+`truncated` (limit reached without finishing, incl. `max_rounds`), `eos_without_final`, `timeout`, `selector_context_limit`,
+`exception`. All except `correct` count as incorrect; no problem is removed from the denominator.
 
-## Cómo diagnosticar un fallo
+## Diagnosing a Failure
 
-1. `failures.jsonl` y `events.jsonl` → etapa y traceback. 2. `logs/vllm.log` → errores del motor (OOM, KV,
-compilación). 3. `preflight/summary.json` → qué validación bloqueó. 4. Para un caso concreto: `candidates.jsonl` +
-`decisions.jsonl` filtrando por `problem_id` reconstruyen la trayectoria completa (qué propuso cada rama, qué vio J,
-probabilidades, qué se aceptó).
+1. `failures.jsonl` and `events.jsonl` → stage and traceback. 2. `logs/vllm.log` → engine errors (OOM, KV,
+compilation). 3. `preflight/summary.json` → which validation blocked execution. 4. For a specific case: `candidates.jsonl` +
+`decisions.jsonl`, filtered by `problem_id`, reconstruct the full trajectory (what each branch proposed, what J saw,
+probabilities, what was accepted).

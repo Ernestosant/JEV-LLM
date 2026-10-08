@@ -1,69 +1,69 @@
-# Limitaciones y trabajo futuro
+# Limitations and Future Work
 
-## Interpretacion
+## Interpretation
 
-JEV-LLM v3 es una **pequena prueba de concepto terminada**, no una demostracion definitiva de un nuevo paradigma. Los [resultados v3](13_results_v3.md) respaldan mayor exactitud de JFINAL frente al baseline personalizado greedy bajo condiciones fijadas; no respaldan superioridad en latencia, superioridad conjunta ni ventaja del selector frente al voto de sus mismos candidatos.
+JEV-LLM v3 is a **small, completed proof of concept**, not a definitive demonstration of a new paradigm. The [v3 results](13_results_v3.md) support higher JFINAL accuracy than the custom greedy baseline under fixed conditions; they do not support latency superiority, joint superiority, or a selector advantage over voting on its own candidates.
 
-Estas limitaciones aclaran el alcance de los resultados, sin modificar el [protocolo original](../protocolo_jev_qwen4b_v3.md), datos congelados, predicciones o analisis originales. La motivacion fue adaptativa tras rondas previas; el piloto y las rondas historicas no entran como evidencia confirmatoria de este test.
+These limitations clarify the scope of the results without modifying the [original protocol](protocols/protocol_jev_qwen4b_v3.md), frozen data, predictions, or original analyses. The motivation was adaptive following earlier rounds; the pilot and historical rounds are not included as confirmatory evidence for this test.
 
-## Validez externa
+## External Validity
 
-- **Dificultad limitada:** 394/500 problemas son intrinsecamente faciles, 96 medios y solo 10 dificiles. Los 150 problemas de nivel alto de fuente no equivalen a 150 problemas realmente dificiles. En latencia hay 78 faciles, 21 medios y uno dificil.
-- **Concentracion de fuentes:** 340/500 problemas proceden de MATH. Cinco dominios con 100 problemas cada uno no garantizan diversidad equivalente de estilos, procedencia o capacidades matematicas.
-- **Fuentes publicas:** excluir identidades previamente usadas y aplicar deduplicacion no excluye contaminacion del entrenamiento ni todos los duplicados semanticos/plantillas. Un test nuevo para esta serie no es necesariamente nuevo para los modelos.
-- **Referencias sin revision humana:** test y piloto fueron revisados por agentes (`agent_reviewed=true`, `human_reviewed=false`). Dos soluciones ciegas y adjudicacion documentada reducen algunas dudas, pero pueden compartir errores. Cero desacuerdos entre parsers sobre 6000 predicciones no establece verdad matematica del gold.
-- **Tarea estrecha:** problemas en ingles con respuesta numerica exacta y formato FINAL estricto. No hay evidencia general para pruebas abiertas, respuestas simbolicas, otros idiomas o tareas no matematicas.
+- **Limited difficulty:** 394/500 problems are intrinsically easy, 96 medium, and only 10 difficult. The 150 high-source-level problems do not equate to 150 genuinely difficult problems. Latency includes 78 easy, 21 medium, and one difficult problem.
+- **Source concentration:** 340/500 problems come from MATH. Five domains with 100 problems each do not guarantee equivalent diversity in styles, provenance, or mathematical capabilities.
+- **Public sources:** excluding previously used identities and applying deduplication does not exclude training contamination or all semantic/template duplicates. A test that is new to this series is not necessarily new to the models.
+- **References without human review:** test and pilot were reviewed by agents (`agent_reviewed=true`, `human_reviewed=false`). Two blind solutions and documented adjudication reduce some uncertainty, but may share errors. Zero parser disagreements over 6000 predictions does not establish the mathematical truth of gold answers.
+- **Narrow task:** English problems with exact numerical answers and strict FINAL formatting. There is no general evidence for open-ended proofs, symbolic answers, other languages, or nonmathematical tasks.
 
-## Modelos y presupuesto
+## Models and Budget
 
-El baseline DavidAU ~13B es un modelo personalizado merge/upscale con componentes 9B y destilaciones, no un oficial de mayor tamano emparejado con el 4B por familia y entrenamiento. JevK5-9B tiene entrenamiento distinto, y el control Qwen3.5-9B oficial no iguala los parametros del hibrido. Contar parametros no iguala computo: cuatro propuestas, selector, batching y entrenamiento difieren.
+The DavidAU ~13B baseline is a custom merge/upscale model with 9B components and distillations, not a larger official model matched to the 4B by family and training. JevK5-9B has different training, and the official Qwen3.5-9B control does not match the hybrid's parameter count. Counting parameters does not equate to compute: four proposals, a selector, batching, and training differ.
 
-El 4B greedy obtuvo +3 pp respecto al 9B oficial greedy, pero Holm p=0.087991 no permite rechazar el contraste secundario a 0.05. Esto no establece una ley inversa de escalado. El peor resultado del ~13B tampoco se reduce a truncamientos: sus errores standalone fueron 55 numeros incorrectos, cinco FINAL invalidos y 20 truncamientos, frente a 24, cero y 15 en el 4B.
+The 4B greedy achieved +3 pp over the official 9B greedy, but Holm p=0.087991 does not allow rejection of the secondary contrast at 0.05. This does not establish an inverse scaling law. The ~13B's worse result is also not limited to truncations: its standalone errors were 55 incorrect numbers, five invalid FINALs, and 20 truncations, versus 24, zero, and 15 for the 4B.
 
-Todos los generadores tuvieron pensamiento desactivado y un limite de 2048 tokens por solucion. Esa igualdad define esta comparacion, pero no mide la mejor capacidad de cada fabricante/modelo. Modos thinking, presupuestos mayores y muestreo apropiado por modelo deben estudiarse de nuevo, con reglas y validaciones previas, no usarse para cambiar post hoc al ganador del experimento original.
+All generators had thinking disabled and a limit of 2048 tokens per solution. That equality defines this comparison but does not measure each manufacturer's/model's best capability. Thinking modes, larger budgets, and model-appropriate sampling must be studied anew, with prior rules and validations, not used to change the original experiment's winner post hoc.
 
-## Atribucion del selector
+## Selector Attribution
 
-El voto offline sobre los mismos cuatro candidatos obtuvo 94.6%, frente a 94.7333% de JFINAL. Diferencia +0.1333 pp, IC95 [-0.5333, 0.8], Holm p=0.7653: **no hay ventaja demostrada del selector**. No demostrar diferencia tampoco prueba equivalencia. La rama fija compartida obtuvo 90.7333%; compararla con JFINAL muestra el beneficio agregado de seleccionar entre candidatos, no identifica critica aprendida frente a mayoria.
+Offline voting over the same four candidates achieved 94.6%, versus JFINAL's 94.7333%. Difference +0.1333 pp, 95% CI [-0.5333, 0.8], Holm p=0.7653: **there is no demonstrated selector advantage**. Failing to demonstrate a difference does not prove equivalence either. The shared fixed branch achieved 90.7333%; comparing it with JFINAL shows the aggregate benefit of selecting among candidates, not an identified contribution from learned critique versus majority vote.
 
-Estos controles son condicionados al pool de JFINAL; no tienen latencia medida ni son replicas independientes. Oracle@4 usa gold y no es desplegable. Un estudio causal de la critica necesita separar generacion, voto, seleccion y revision, con identico pool y contabilidad de sus costos.
+These controls are conditional on JFINAL's pool; they have no measured latency and are not independent replications. Oracle@4 uses gold and is not deployable. A causal study of critique needs to separate generation, voting, selection, and revision, with an identical pool and accounting for their costs.
 
-## Backend y trazabilidad
+## Backend and Traceability
 
-| Brecha observada | Evidencia disponible | Lo que no permite afirmar |
+| Observed gap | Available evidence | What it does not establish |
 |---|---|---|
-| G: eager frente a graph sobre tres prefijos cortos | Comprobacion acotada de G | Equivalencia de respuestas completas en toda la distribucion |
-| B13 y Q9: comprobacion eager/native omitida por memoria | Omision explicita; estres de continuidad pasado | Equivalencia de exactitud con ejecucion nativa independiente |
-| Recuperacion J1 | Recuperacion local byte-exact con `sourceSha` y compromisos de manifiesto | Verificacion criptografica de transporte remoto: su SHA no quedo persistido |
-| LATV3: memoria de fase H2 | Evidencia real de H2 vinculada por proyeccion solo en memoria | Que el resumen bruto global B3 ya represente H2 o haya sido corregido |
+| G: eager versus graph on three short prefixes | Limited check of G | Full-answer equivalence across the entire distribution |
+| B13 and Q9: eager/native check omitted because of memory constraints | Explicit omission; continuity stress passed | Accuracy equivalence with independent native execution |
+| J1 recovery | Local byte-exact recovery with `sourceSha` and manifest commitments | Cryptographic verification of remote transport: its SHA was not persisted |
+| LATV3: phase H2 memory | Actual H2 evidence linked through an in-memory-only projection | That the raw global B3 summary already represents H2 or has been corrected |
 
-El estres de memoria/continuidad verifica que una ruta puede ejecutarse, no que preserve exactitud nativa. La concordancia del parser verifica otra capa distinta. No deben agruparse como una unica aprobacion total.
+Memory/continuity stress verifies that a path can execute, not that it preserves native accuracy. Parser agreement verifies a different layer. They must not be grouped into a single blanket approval.
 
-La evidencia J1 sostiene recuperacion local, pero falta una prueba remota de transporte durable; no se puede reconstruir retrospectivamente como si hubiera quedado registrada. En LATV3 se debe mantener la distincion entre evidencia por fase y resumen global sin mutar el artefacto bruto. Son brechas de auditoria que deben declararse, no ocultarse ni corregirse reescribiendo historia.
+J1 evidence supports local recovery, but durable remote transport proof is missing; it cannot be reconstructed retrospectively as if it had been recorded. In LATV3, the distinction between phase-specific evidence and the global summary must be maintained without mutating the raw artifact. These are audit gaps that must be disclosed, not hidden or corrected by rewriting history.
 
-## Latencia y estadistica
+## Latency and Statistics
 
-El speedup geometrico pareado fue 1.00192494, IC97.5% [0.88386781, 1.12642550]. No demuestra superioridad en latencia ni reduccion del 10%, y no demuestra equivalencia. La conclusion conjunta requiere que ambos objetivos coprincipales superen sus umbrales; aqui solo la calidad lo hace.
+The paired geometric speedup was 1.00192494, 97.5% CI [0.88386781, 1.12642550]. It does not demonstrate latency superiority or a 10% reduction, and it does not demonstrate equivalence. The joint conclusion requires both co-primary objectives to exceed their thresholds; here only quality does so.
 
-Las 1800 mediciones reales son nueve por sistema y problema, en una misma A100 de 40 GB; la unidad inferencial son 100 clusters de problema. Las 6000 predicciones de calidad tampoco equivalen a 6000 problemas independientes. Bootstrap e intervalos son aproximados y la familia secundaria usa Holm sobre cinco contrastes fijados, no seleccionados segun resultados.
+The 1800 actual measurements are nine per system and problem, on the same 40 GB A100; the inferential unit is 100 problem clusters. The 6000 quality predictions also do not equate to 6000 independent problems. Bootstrap and intervals are approximate, and the secondary family uses Holm over five fixed contrasts, not contrasts selected according to results.
 
-La latencia es condicional a motores calientes. Carga, descarga, probes y calentamiento quedan fuera del reloj por caso. Tiempos de brazos ejecutados en corridas distintas son descriptivos, no sustituyen el estudio pareado. Una unica campana no caracteriza toda la variabilidad de runtime. Las 15.76469455 horas A100 acumuladas (56752.900384 segundos) no son ahorro financiero demostrado ni facturacion; el techo fue 25 horas con un maximo de dos asignaciones simultaneas.
+Latency is conditional on warm engines. Loading, unloading, probes, and warm-up are outside the per-case timer. Timings for arms executed in different runs are descriptive and do not replace the paired study. A single campaign does not characterize all runtime variability. The cumulative 15.76469455 A100 hours (56752.900384 seconds) are neither demonstrated financial savings nor billing; the ceiling was 25 hours with a maximum of two simultaneous allocations.
 
-## Prioridades futuras
+## Future Priorities
 
-Cada ampliacion debe ser un estudio separado, con preregistro, presupuesto y criterios de exclusion previos; no un cambio retrospectivo del protocolo original.
+Each extension must be a separate study, with prior preregistration, budget, and exclusion criteria; not a retrospective change to the original protocol.
 
-1. **Validacion independiente native/eager:** elegir y fijar un subconjunto antes de ver sus resultados; comparar respuestas completas, tokens y decisiones bajo motores nativo, eager y graph, incluyendo B13 y Q9. Si memoria impide una ruta, declarar el limite o disenar otra prueba separada, no darla por pasada con estres de continuidad.
-2. **Controles oficiales emparejados:** comparar tamanos de una misma familia oficial y modos equivalentes, con revisiones completas y plantillas verificadas. Separar el efecto de tamano del de merge/upscale, distilacion y entrenamiento; evaluar tambien modos recomendados por fabricante en una matriz nueva.
-3. **Presupuestos y muestreo justificados:** estudiar curvas calidad/costo con mas tokens y thinking cuando corresponda, y ajustes de muestreo sensatos por modelo validados en desarrollo/piloto independiente. No escoger temperaturas arbitrarias ni afinarlas sobre el test final.
-4. **Holdout realmente dificil y novedoso:** incorporar suficientes problemas genuinamente dificiles y nuevas fuentes, revision humana independiente de referencias, unidades y soluciones, y un estudio explicito de contaminacion y duplicados semanticos. Reportar incertidumbre de procedencia; no prometer que frescura elimina toda contaminacion.
-5. **Critica frente a mayoria:** aislar voto, seleccion aprendida y critica/revision sobre candidatos compartidos, con desempates preregistrados y sin gold en decisiones. Medir tambien latencia, tokens, memoria y costo de cada politica; incluir comparaciones a presupuesto de computo comparable.
-6. **Variabilidad de runtime:** repetir bloques contrabalanceados en el mismo hardware con condiciones documentadas y separacion de tiempos calientes, arranque y recargas. Mantener repeticiones dentro del cluster de problema; no convertir repeticiones temporales en nuevos problemas.
-7. **Mayor potencia y replica:** dimensionar una muestra mayor segun efectos y discordancias relevantes, antes de inferir; preregistrar analisis pareado por cluster y multiplicidad corregida. No aumentar N, cambiar semillas o parar al obtener un p favorable. Replicar con otra seleccion independiente antes de generalizar.
-8. **Auditoria durable y publicacion acotada:** registrar en futuras recolecciones SHA remoto y local persistidos, y evidencia de memoria explicitamente indexada por fase. Para esta serie, conservar y explicar J1/LATV3 sin mutar originales. Publicar solo resumenes curados y revisar licencias y privacidad antes de cualquier ampliacion de materiales.
+1. **Independent native/eager validation:** choose and fix a subset before seeing its results; compare complete answers, tokens, and decisions under native, eager, and graph engines, including B13 and Q9. If memory prevents a path, disclose the limit or design another separate test, rather than treating continuity stress as a pass.
+2. **Matched official controls:** compare sizes within the same official family and equivalent modes, with full revisions and verified templates. Separate the size effect from merge/upscale, distillation, and training effects; also evaluate manufacturer-recommended modes in a new matrix.
+3. **Justified budgets and sampling:** study quality/cost curves with more tokens and thinking where appropriate, and sensible model-specific sampling settings validated on independent development/pilot data. Do not choose arbitrary temperatures or tune them on the final test.
+4. **A genuinely difficult and novel holdout:** include enough genuinely difficult problems and new sources, independent human review of references, units, and solutions, and an explicit study of contamination and semantic duplicates. Report provenance uncertainty; do not promise that freshness eliminates all contamination.
+5. **Critique versus majority vote:** isolate voting, learned selection, and critique/revision over shared candidates, with preregistered tie-breaking and no gold in decisions. Also measure latency, tokens, memory, and cost for each policy; include comparisons at comparable compute budgets.
+6. **Runtime variability:** repeat counterbalanced blocks on the same hardware with documented conditions and separate warm, startup, and reload timings. Keep repetitions within the problem cluster; do not turn timing repetitions into new problems.
+7. **Greater power and replication:** size a larger sample according to relevant effects and discordances before inference; preregister paired cluster analysis and multiplicity adjustment. Do not increase N, change seeds, or stop upon obtaining a favorable p-value. Replicate with another independent selection before generalizing.
+8. **Durable audit and limited publication:** persist remote and local SHA values in future collections, and explicitly index memory evidence by phase. For this series, preserve and explain J1/LATV3 without mutating originals. Publish only curated summaries and review licenses and privacy before any expansion of materials.
 
-## Publicacion y conclusion
+## Publication and Conclusion
 
-Consultar el [resumen publico final](../public_results/v3/resumen_es.md), el [informe analitico](../public_results/v3/report.md) y la [comparacion coprincipal](../public_results/v3/primary_comparison.json), dentro de la seleccion curada prevista para `public_results/v3`. Estos enlaces no implican permiso para redistribuir el dataset completo, logs de nube ni el bundle bruto. Tampoco representan una aprobacion operativa general. La documentacion publica no necesita rutas personales, endpoints, UUIDs de GPU, identificadores de host ni valores de entorno o credenciales.
+See the [final public summary](../public_results/v3/summary.md), the [analytical report](../public_results/v3/report.md), and the [co-primary comparison](../public_results/v3/primary_comparison.json), within the curated selection planned for `public_results/v3`. These links do not imply permission to redistribute the full dataset, cloud logs, or raw bundle. Nor do they represent general operational approval. Public documentation does not need personal paths, endpoints, GPU UUIDs, host identifiers, environment values, or credentials.
 
-El resultado util de esta pequena prueba es una mejora de exactitud acotada y una lista concreta de controles pendientes. **No hay evidencia de que el selector supere al voto compartido, de que el hibrido sea mas rapido, ni de que modelos pequenos sean universalmente superiores.** Las prioridades futuras buscan probar esas preguntas por separado, no transformar el resultado original en un avance definitivo.
+The useful outcome of this small proof of concept is a limited accuracy improvement and a concrete list of pending controls. **There is no evidence that the selector outperforms shared voting, that the hybrid is faster, or that small models are universally superior.** Future priorities seek to test those questions separately, not turn the original result into a definitive breakthrough.

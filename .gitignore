@@ -12,9 +12,7 @@
 !/src/
 !/tests/
 !/tools/
-!/protocolo_jev_qwen_v3.md
-!/protocolo_jev_qwen4b_v2.md
-!/protocolo_jev_qwen4b_v3.md
+# Original frozen protocol files remain local; publish their English reading copies in docs/protocols/.
 
 # This local-evidence test embeds a real hardware/phase identifier.
 /tests/test_operational_latency_auditor_v3.py

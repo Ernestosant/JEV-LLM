@@ -1,24 +1,26 @@
-# Preflight y validaciones (§14 + enmienda A6)
+# Preflight and Validations (§14 + Amendment A6)
 
-Todas corren dentro de cada notebook de condición (`PREFLIGHT_MODE`): `full` (todas, siempre), `light` (reutiliza
-las pesadas cacheadas en `/content/jev_llm/preflight_cache/<stack_hash>/` si existen en la misma VM y stack), `off`
-(sólo las baratas). `ABORT_ON_PREFLIGHT_FAIL=True` detiene el notebook ante una bloqueante.
+> Historical context: this document describes the legacy 0.8B experiment, not the completed v3 study. See [v3 results](13_results_v3.md) and [limitations and future work](14_limitations_and_future_work.md).
 
-| Validación | Paso §14 | Bloqueante | Qué verifica | Resultado en el smoke (A100) |
+All run within each condition notebook (`PREFLIGHT_MODE`): `full` (all, always), `light` (reuses
+expensive checks cached in `/content/jev_llm/preflight_cache/<stack_hash>/` if available on the same VM and stack), `off`
+(only inexpensive checks). `ABORT_ON_PREFLIGHT_FAIL=True` stops the notebook on a blocking failure.
+
+| Validation | §14 Step | Blocking | What It Checks | Smoke Test Result (A100) |
 |---|---|---|---|---|
-| `lock` | 1–2 | sí | commit == SHA fijado; SHA-256 de **cada archivo** (pesos incluidos) vs LFS del Hub y `SHA256SUMS` de JevK5; arquitectura; parámetros lingüísticos desde cabeceras | ok; P_G=0.752B, P_J=8.954B |
-| `parser_selftest` | 3 | sí | fracciones, decimales, `2/4`, menos Unicode, `1/0`, texto extra, FINAL parcial, FINAL en EOS | 16/16 |
-| `chat_template` | 3 | sí | plantilla publicada renderiza `<think>\n\n</think>\n\n` con `enable_thinking=False`; texto y hash guardados | ok (G y B) |
-| `prompt_length` | 3 | sí | prompts renderizados de los problemas seleccionados ≤ 512 tokens | máx 150 (N=1) |
-| `sampling_semantics` | 3 | sí | `top_k=0` = desactivado en vLLM; semillas < 2⁶³ | ok |
-| `selector_native_reference` | 5 | sí | runtime JevK5 publicado (subproceso) sobre 8 decisiones sintéticas (cortas, a mitad de frase, duplicadas, ~3k tokens); IDs idénticos a `prompt_text()` | ok, T=1.316 |
-| `selector_equivalence` | 5 | sí | vLLM vs nativo con las mismas IDs: argmax (tolerancia 2 ulps bf16), |Δp| | 0 discrepancias; |Δp| máx 0.022 |
-| `continuity` | 4 | no | continuar desde prefijos de 1/63/64/65/127/128 tokens reproduce la continuación greedy de una sola petición | 100 % |
-| `batching_audit` | 6 | no | 4 peticiones secuenciales vs en batch (10 prefijos dev, 64 tokens) | 13.6 s vs 6.3 s → ×2.17 |
-| `stress` | 6 | sí | 4 (o 1) generaciones de longitud máxima con `ignore_eos`; entrada de J cercana a 16,384 tokens; logits finitos; pico NVML | ok; J 16,232 tokens; pico 28.6 GiB |
-| `eager_vs_graph` | 8.3 | no | tokens greedy con CUDA graphs vs motor eager (3 prompts × 64) | 100 % |
-| `r4_memory` (opcional) | 8.3 | no | memoria con 4 copias de G + J residentes (sin corridas) | no ejecutado (opcional) |
+| `lock` | 1–2 | yes | commit == pinned SHA; SHA-256 of **every file** (including weights) vs Hub LFS and JevK5 `SHA256SUMS`; architecture; language-model parameters from headers | ok; P_G=0.752B, P_J=8.954B |
+| `parser_selftest` | 3 | yes | fractions, decimals, `2/4`, Unicode minus, `1/0`, extra text, partial FINAL, FINAL at EOS | 16/16 |
+| `chat_template` | 3 | yes | published template renders `<think>\n\n</think>\n\n` with `enable_thinking=False`; text and hash saved | ok (G and B) |
+| `prompt_length` | 3 | yes | rendered prompts for the selected problems ≤ 512 tokens | max 150 (N=1) |
+| `sampling_semantics` | 3 | yes | `top_k=0` = disabled in vLLM; seeds < 2⁶³ | ok |
+| `selector_native_reference` | 5 | yes | published JevK5 runtime (subprocess) on 8 synthetic decisions (short, mid-sentence, duplicated, ~3k tokens); IDs identical to `prompt_text()` | ok, T=1.316 |
+| `selector_equivalence` | 5 | yes | vLLM vs native with the same IDs: argmax (2 ulps bf16 tolerance), |Δp| | 0 discrepancies; max |Δp| 0.022 |
+| `continuity` | 4 | no | continuing from 1/63/64/65/127/128-token prefixes reproduces the greedy continuation from a single request | 100 % |
+| `batching_audit` | 6 | no | 4 sequential vs batched requests (10 dev prefixes, 64 tokens) | 13.6 s vs 6.3 s → ×2.17 |
+| `stress` | 6 | yes | 4 (or 1) maximum-length generations with `ignore_eos`; J input near 16,384 tokens; finite logits; peak NVML | ok; J 16,232 tokens; peak 28.6 GiB |
+| `eager_vs_graph` | 8.3 | no | greedy tokens with CUDA graphs vs eager engine (3 prompts × 64) | 100 % |
+| `r4_memory` (optional) | 8.3 | no | memory with 4 copies of G + J resident (no runs) | not run (optional) |
 
-Nota: continuidad, batching y eager/graph son diagnósticos (no bloqueantes) porque bf16 y el orden de batch pueden
-cambiar legítimamente tokens; sus números se publican. El muestreo de vLLM no es invariante al batch: misma semilla
-no garantiza la misma salida entre GPUs/stacks (§5.2).
+Note: continuity, batching, and eager/graph are diagnostic (non-blocking) because bf16 and batch order can
+legitimately change tokens; their numbers are published. vLLM sampling is not batch-invariant: the same seed
+does not guarantee the same output across GPUs/stacks (§5.2).

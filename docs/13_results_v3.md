@@ -1,90 +1,90 @@
-# Resultados de la tercera ronda (v3)
+# Third-Round Results (v3)
 
-## Alcance
+## Scope
 
-La tercera ronda termino: es una **pequena prueba de concepto**, no un avance definitivo ni una demostracion general de superioridad de arquitecturas. Bajo el protocolo fijado, el hibrido obtuvo mayor exactitud que el baseline principal; no demostro ser mas rapido ni superar al voto de las mismas cuatro propuestas.
+The third round is complete: it is a **small proof of concept**, not a definitive breakthrough or a general demonstration of architectural superiority. Under the fixed protocol, the hybrid achieved higher accuracy than the primary baseline; it did not demonstrate that it was faster or that it outperformed voting over the same four proposals.
 
-Este informe describe resultados terminados sin reescribir el [protocolo preregistrado](../protocolo_jev_qwen4b_v3.md), los datos ni los resultados originales. Los estados de preparacion en [12_implementation_v3.md](12_implementation_v3.md) son fotografias historicas, no el estado final. Las [limitaciones y el trabajo futuro](14_limitations_and_future_work.md) forman parte de la interpretacion, no son salvedades opcionales.
+This report describes completed results without rewriting the [preregistered protocol](protocols/protocol_jev_qwen4b_v3.md), data, or original results. The preparation states in [12_implementation_v3.md](12_implementation_v3.md) are historical snapshots, not the final state. The [limitations and future work](14_limitations_and_future_work.md) are part of the interpretation, not optional caveats.
 
-## Diseno y cobertura
+## Design and Coverage
 
-| Componente | Cobertura efectiva | Unidad de analisis |
+| Component | Actual coverage | Unit of analysis |
 |---|---|---|
-| Calidad confirmatoria | 6000 casos fisicos, exactamente 500 IDs de problemas | 500 problemas, no 6000 observaciones independientes |
-| Piloto tecnico separado | 50 IDs adicionales, 600 casos | No entra en la calidad confirmatoria |
-| Latencia controlada | 1800 mediciones reales sobre 100 IDs del test | 100 problemas, nueve tiempos por sistema y problema |
+| Confirmatory quality | 6000 physical cases, exactly 500 problem IDs | 500 problems, not 6000 independent observations |
+| Separate technical pilot | 50 additional IDs, 600 cases | Not included in confirmatory quality |
+| Controlled latency | 1800 actual measurements on 100 test IDs | 100 problems, nine timings per system and problem |
 
-Los brazos estocasticos usan las semillas 17, 29 y 43; cada referencia greedy se ejecuta una vez por problema. JFINAL genera cuatro soluciones completas mediante solicitudes simultaneas a **una sola copia fisica** de Qwen3.5-4B y usa JevK5-9B para seleccionar una. No son cuatro copias de pesos. Los 1500 pools compartidos contienen 6000 posiciones de candidatos registradas y estan completos; no deben confundirse con los 6000 casos de la matriz de calidad.
+The stochastic arms use seeds 17, 29, and 43; each greedy reference runs once per problem. JFINAL generates four complete solutions through simultaneous requests to **a single physical copy** of Qwen3.5-4B and uses JevK5-9B to select one. These are not four copies of the weights. The 1500 shared pools contain 6000 recorded candidate positions and are complete; they must not be confused with the 6000 cases in the quality matrix.
 
-La comparacion principal, fijada antes del test, es JFINAL frente a B13_GREEDY. B13 designa el modelo personalizado DavidAU de aproximadamente 13B, no un Qwen oficial de ese tamano. Q9_GREEDY es el control oficial Qwen3.5-9B; tampoco iguala los parametros desplegados del hibrido. Identidades y revisiones completas constan en el protocolo.
+The primary comparison, fixed before the test, is JFINAL versus B13_GREEDY. B13 denotes the custom DavidAU model of approximately 13B, not an official Qwen of that size. Q9_GREEDY is the official Qwen3.5-9B control; it also does not match the hybrid's deployed parameter count. Full identities and revisions are recorded in the protocol.
 
-Se usaron BF16, vLLM 0.30.0, pensamiento desactivado y hasta 2048 tokens por solucion. La latencia pareada usa la misma A100 de 40 GB para ambos sistemas: tres semillas por tres repeticiones temporales, 900 mediciones por sistema. Se toma la mediana de sus nueve tiempos por problema. Carga, descarga, probes y calentamiento quedan fuera del cronometro de caso; no es una medicion de servicio frio ni de costo integral de despliegue.
+BF16, vLLM 0.30.0, disabled thinking, and up to 2048 tokens per solution were used. Paired latency uses the same 40 GB A100 for both systems: three seeds by three timing repetitions, 900 measurements per system. The median of their nine timings per problem is used. Loading, unloading, probes, and warm-up are outside the case timer; this is not a cold-service or full deployment-cost measurement.
 
-El consumo acumulado registrado fue **56752.900384 segundos GPU, equivalentes a 15.76469455 horas A100**, dentro del techo total de 25 horas A100 y del maximo de dos asignaciones simultaneas. Es tiempo acumulado de recursos, no duracion de pared, factura monetaria ni CU facturadas.
+Recorded cumulative consumption was **56752.900384 GPU seconds, equivalent to 15.76469455 A100 hours**, within the total ceiling of 25 A100 hours and the maximum of two simultaneous allocations. This is cumulative resource time, not wall-clock duration, a monetary bill, or billed CU.
 
-## Exactitud
+## Accuracy
 
-| Condicion | Casos fisicos | Problemas | Exactitud (%) |
+| Condition | Physical cases | Problems | Accuracy (%) |
 |---|---:|---:|---:|
-| G_SINGLE: 4B con muestreo | 1500 | 500 | 91.0 |
+| G_SINGLE: 4B with sampling | 1500 | 500 | 91.0 |
 | G_GREEDY: 4B greedy | 500 | 500 | 92.2 |
-| JFINAL: cuatro propuestas + selector | 1500 | 500 | 94.7333 |
-| B13: modelo personalizado con muestreo | 1500 | 500 | 84.2 |
-| B13_GREEDY: baseline principal | 500 | 500 | 84.0 |
-| Q9_GREEDY: 9B oficial greedy | 500 | 500 | 89.2 |
+| JFINAL: four proposals + selector | 1500 | 500 | 94.7333 |
+| B13: custom model with sampling | 1500 | 500 | 84.2 |
+| B13_GREEDY: primary baseline | 500 | 500 | 84.0 |
+| Q9_GREEDY: official 9B greedy | 500 | 500 | 89.2 |
 
-En brazos estocasticos, la exactitud se resume primero por problema sobre tres semillas. Greedy no se triplica como si fueran tres muestras independientes. Fallos de modelo y truncamientos cuentan como incorrectos; no se excluyen para favorecer el resultado.
+For stochastic arms, accuracy is first summarized per problem over three seeds. Greedy is not triplicated as if it were three independent samples. Model failures and truncations count as incorrect; they are not excluded to favor the result.
 
-## Efectos coprincipales
+## Co-Primary Effects
 
-Bootstrap pareado por cluster de problema, estratificado por dominio, con 10000 remuestreos y semilla 271828. Los dos intervalos confirmatorios del 97.5% aplican Bonferroni; son aproximados.
+Paired problem-cluster bootstrap, stratified by domain, with 10000 resamples and seed 271828. The two confirmatory 97.5% intervals apply Bonferroni adjustment; they are approximate.
 
-| Efecto | Estimacion | IC 97.5% Bonferroni | Lectura |
+| Effect | Estimate | Bonferroni 97.5% CI | Interpretation |
 |---|---:|---|---|
-| Exactitud JFINAL - B13_GREEDY | +10.7333 pp | [7.5333, 14.1333] pp | Evidencia de mayor exactitud en este test |
-| Speedup geometrico pareado B13_GREEDY / JFINAL | 1.00192494 | [0.88386781, 1.12642550] | No demuestra mayor velocidad |
+| Accuracy JFINAL - B13_GREEDY | +10.7333 pp | [7.5333, 14.1333] pp | Evidence of higher accuracy on this test |
+| Paired geometric speedup B13_GREEDY / JFINAL | 1.00192494 | [0.88386781, 1.12642550] | Does not demonstrate greater speed |
 
-Un speedup mayor que 1 favorece a JFINAL. El intervalo de latencia incluye 1: no se demuestra superioridad en latencia ni **superioridad conjunta**. Tampoco se demuestra una reduccion de tiempo del 10%; ni siquiera la estimacion puntual alcanza el umbral `1 / 0.9`. La diferencia de calidad supera el umbral practico de 5 pp, incluido su limite inferior confirmatorio. Ausencia de significancia en latencia no demuestra equivalencia.
+A speedup greater than 1 favors JFINAL. The latency interval includes 1: neither latency superiority nor **joint superiority** is demonstrated. A 10% time reduction is not demonstrated either; even the point estimate does not reach the threshold `1 / 0.9`. The quality difference exceeds the practical threshold of 5 pp, including its confirmatory lower bound. Lack of significance in latency does not demonstrate equivalence.
 
-## Controles compartidos
+## Shared Controls
 
-| Control offline sobre el mismo pool | Exactitud (%) |
+| Offline control on the same pool | Accuracy (%) |
 |---|---:|
-| Rama original 0 fija, antes de permutacion | 90.7333 |
-| Voto/pluralidad de cuatro respuestas validas (VOTE4SHARED) | 94.6 |
+| Fixed original branch 0, before permutation | 90.7333 |
+| Vote/plurality over four valid answers (VOTE4SHARED) | 94.6 |
 | JFINAL | 94.7333 |
 
-El voto usa respuestas numericas terminales validas, sin gold, y desempata por la menor rama original. JFINAL - voto compartido es **+0.1333 pp**, con IC95 descriptivo **[-0.5333, 0.8] pp** y p ajustado Holm **0.7653**. Por tanto, **no hay evidencia de ventaja del selector sobre este voto**. La mejora respecto a una respuesta unica no identifica por si sola una contribucion propia de la critica/seleccion aprendida.
+Voting uses valid terminal numerical answers, without gold, and breaks ties by the lowest original branch. JFINAL - shared vote is **+0.1333 pp**, with descriptive 95% CI **[-0.5333, 0.8] pp** and Holm-adjusted p **0.7653**. Therefore, **there is no evidence of a selector advantage over this vote**. Improvement over a single answer does not, by itself, identify a distinct contribution from learned critique/selection.
 
-Los controles reutilizan exactamente los candidatos de JFINAL, no constituyen ejecuciones independientes. No se les asigno latencia: estas exactitudes no prueban ahorro de tiempo o costo. Oracle@4 (96.6%) es un diagnostico offline que usa gold, no un sistema desplegable.
+The controls reuse exactly JFINAL's candidates; they are not independent runs. No latency was assigned to them: these accuracies do not prove time or cost savings. Oracle@4 (96.6%) is an offline diagnostic that uses gold, not a deployable system.
 
-## Anomalia de tamano y errores
+## Size Anomaly and Errors
 
-Que G_GREEDY alcance 92.2%, B13_GREEDY 84.0% y Q9_GREEDY 89.2% no prueba que los modelos pequenos sean generalmente mejores. El baseline DavidAU es una construccion personalizada merge/upscale con componentes de modelos de 9B y destilaciones; no es un control oficial de la misma familia emparejado por tamano o entrenamiento. Las comparaciones tampoco igualan FLOPs, entrenamiento ni capacidad maxima del fabricante.
+G_GREEDY achieving 92.2%, B13_GREEDY 84.0%, and Q9_GREEDY 89.2% does not prove that small models are generally better. The DavidAU baseline is a custom merge/upscale construction with 9B model components and distillations; it is not an official same-family control matched by size or training. The comparisons also do not match FLOPs, training, or the manufacturer's maximum capability.
 
-El contraste secundario 4B greedy - 9B oficial greedy es +3 pp, pero su p ajustado Holm es 0.087991: no se rechaza a nivel 0.05 en la familia secundaria fijada de cinco contrastes. No debe rescatarse como hallazgo confirmatorio por su intervalo descriptivo sin correccion.
+The secondary contrast 4B greedy - official 9B greedy is +3 pp, but its Holm-adjusted p is 0.087991: it is not rejected at the 0.05 level in the fixed secondary family of five contrasts. It must not be recast as a confirmatory finding based on its unadjusted descriptive interval.
 
-| Errores standalone greedy | Numero incorrecto con FINAL valido | FINAL invalido sin truncamiento | Truncamiento | Total incorrecto |
+| Standalone greedy errors | Incorrect number with valid FINAL | Invalid FINAL without truncation | Truncation | Total incorrect |
 |---|---:|---:|---:|---:|
 | 4B | 24 | 0 | 15 | 39 |
 | DavidAU ~13B | 55 | 5 | 20 | 80 |
 
-La brecha no se explica solo por truncamientos: tambien hay mas respuestas numericas incorrectas del baseline. Esto no determina la causa; presupuesto, modo, entrenamiento y backend requieren controles separados. Cambiar ahora a thinking, aumentar tokens o ajustar muestreo no reemplazaria esta comparacion: seria un estudio nuevo.
+The gap is not explained by truncations alone: the baseline also has more incorrect numerical answers. This does not determine the cause; budget, mode, training, and backend require separate controls. Switching to thinking now, increasing tokens, or adjusting sampling would not replace this comparison: it would be a new study.
 
-## Auditoria y limites
+## Audit and Limits
 
-El parser estricto independiente reviso las **6000 predicciones y obtuvo cero desacuerdos**. Es evidencia de concordancia de extraccion/correccion numerica, no de que todos los gold sean verdaderos ni de equivalencia de los backends.
+The independent strict parser reviewed **6000 predictions and found zero disagreements**. This is evidence of agreement in extraction/numerical correctness assessment, not that all gold answers are true or that the backends are equivalent.
 
-El test contiene 394 problemas intrinsecamente faciles, 96 medios y 10 dificiles; 340 proceden de MATH. El balance 150/200/150 es por nivel de fuente, no por dificultad real. Los 550 problemas de test/piloto tuvieron revision agentica, no humana. Benchmarks publicos, contaminacion de entrenamiento y duplicados semanticos no excluidos limitan la generalizacion.
+The test contains 394 intrinsically easy problems, 96 medium, and 10 difficult; 340 come from MATH. The 150/200/150 balance is by source level, not actual difficulty. The 550 test/pilot problems underwent agent review, not human review. Public benchmarks, training contamination, and semantic duplicates that were not excluded limit generalization.
 
-La validacion de G incluyo solo tres prefijos cortos eager frente a graph. B13 y Q9 omitieron explicitamente esa comprobacion por memoria. El estres de continuidad paso, pero no prueba equivalencia de exactitud nativa. La recuperacion J1 dispone de evidencia local byte-exact con `sourceSha` y manifiesto, no de SHA remoto de transporte persistido. En LATV3 la vinculacion de memoria a la fase H2 se acredita por una proyeccion en memoria; el resumen bruto global B3 no fue modificado. Estas brechas no se convierten en validaciones completas por haber terminado la ejecucion.
+G validation included only three short prefixes comparing eager versus graph. B13 and Q9 explicitly omitted that check because of memory constraints. Continuity stress passed, but it does not prove native accuracy equivalence. J1 recovery has local byte-exact evidence with `sourceSha` and a manifest, not a persisted remote transport SHA. In LATV3, the association of memory evidence with phase H2 is supported by an in-memory projection; the raw global B3 summary was not modified. These gaps do not become complete validations merely because execution finished.
 
-## Resumenes publicos
+## Public Summaries
 
-Enlaces destinados a la seleccion curada de `public_results/v3`, no a artefactos operativos:
+Links intended for the curated selection in `public_results/v3`, not operational artifacts:
 
-- [Resumen final en espanol](../public_results/v3/resumen_es.md).
-- [Informe analitico final](../public_results/v3/report.md).
-- [Comparacion coprincipal estructurada](../public_results/v3/primary_comparison.json).
+- [Final summary](../public_results/v3/summary.md).
+- [Final analytical report](../public_results/v3/report.md).
+- [Structured co-primary comparison](../public_results/v3/primary_comparison.json).
 
-La publicacion de esos resumenes no implica publicacion, aprobacion operativa ni permiso de redistribucion del bundle bruto, dataset completo o logs de nube. No se incluyen identificadores de ejecucion, rutas personales ni secretos. La conclusion defendible sigue siendo local: **mejor exactitud que el baseline fijado, sin ventaja demostrada de latencia ni del selector frente al voto compartido**.
+Publishing these summaries does not imply publication, operational approval, or redistribution permission for the raw bundle, full dataset, or cloud logs. Execution identifiers, personal paths, and secrets are not included. The defensible conclusion remains local: **higher accuracy than the fixed baseline, without a demonstrated latency advantage or selector advantage over shared voting**.

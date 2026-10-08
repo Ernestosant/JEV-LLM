@@ -1,96 +1,98 @@
-# Runbook: ejecutar el experimento en Google Colab
+# Runbook: Running the Experiment in Google Colab
 
-**Actualizacion 2026-09-29:** `launch.sh` y `launch_seq.sh` arrancan un guard independiente:
-pings WebSocket cada 15 s, salud de la asignacion cada 20 s y cierre con confirmacion del
-servidor. El CLI 0.7.4 instalado NO trae un daemon separado. Ver `08_session_lifecycle.md`.
-Para estado aislado de CLI, exporta `COLAB_SESSION_CONFIG` con la misma ruta usada por
-tu wrapper `colab --config`; no basta exportar una funcion bash porque `timeout colab`
-llama al ejecutable del PATH. `stop.sh` cancela el guard y verifica la liberacion remota.
+> Historical context: this document describes the legacy 0.8B experiment, not the completed v3 study. See [v3 results](13_results_v3.md) and [limitations and future work](14_limitations_and_future_work.md).
 
-## 0. Preparación local (Windows)
+**Update 2026-09-29:** `launch.sh` and `launch_seq.sh` start an independent guard:
+WebSocket pings every 15 s, allocation health checks every 20 s, and shutdown with server
+confirmation. The installed CLI 0.7.4 does NOT include a separate daemon. See [session lifecycle](08_session_lifecycle.md).
+For isolated CLI state, export `COLAB_SESSION_CONFIG` with the same path used by
+your `colab --config` wrapper; exporting a bash function is insufficient because `timeout colab`
+calls the executable on PATH. `stop.sh` cancels the guard and verifies remote release.
+
+## 0. Local Preparation (Windows)
 
 ```powershell
-python data\build_dataset.py        # sólo si cambias el dataset (ya está congelado)
-python -m pytest tests -q            # 50 tests en CPU
-python tools\build_notebooks.py      # regenera notebooks/*.ipynb
-python tools\make_bundle.py          # dist\jev_llm_bundle.zip (sin gold) y dist\jev_llm_analysis_bundle.zip
+python data\build_dataset.py        # only if you change the dataset (already frozen)
+python -m pytest tests -q            # 50 CPU tests
+python tools\build_notebooks.py      # regenerates notebooks/*.ipynb
+python tools\make_bundle.py          # dist\jev_llm_bundle.zip (without gold) and dist\jev_llm_analysis_bundle.zip
 ```
 
-## 1. GPU por notebook
+## 1. GPU per Notebook
 
-| Notebook | Condición | GPU | Motivo |
+| Notebook | Condition | GPU | Reason |
 |---|---|---|---|
-| `01_G_SINGLE` | G_SINGLE | **L4** (~1.7 CU/h) | 0.8B cabe de sobra; latencia marcada como no comparable |
+| `01_G_SINGLE` | G_SINGLE | **L4** (~1.7 CU/h) | 0.8B fits easily; latency marked as non-comparable |
 | `02_B13`, `03_B13_GREEDY` | B13, B13_GREEDY | **A100 40GB** (~5.4 CU/h) | B ≈ 25 GB BF16 |
-| `04_J64`, `05_JSTEP`, `06_JFINAL` | híbridos | **A100 40GB** | G+J ≈ 18 GiB + KV + 16k de J; L4 (22.5 GiB) no alcanza |
-| `07_analisis` | — | CPU | sin GPU |
-| `08_estudio_latencia` | todas | **A100 40GB** | latencia confirmatoria en una sola VM |
+| `04_J64`, `05_JSTEP`, `06_JFINAL` | hybrids | **A100 40GB** | G+J ≈ 18 GiB + KV + J's 16k context; L4 (22.5 GiB) is insufficient |
+| `07_analisis` | — | CPU | no GPU |
+| `08_estudio_latencia` | all | **A100 40GB** | confirmatory latency on a single VM |
 
-T4 queda descartada (sin BF16). A100 80GB / G4 / H100 no son necesarias y cuestan más CU.
-Tarifas: reportes de usuarios 2026; verifica en Colab → *Entorno de ejecución → Ver recursos*.
+T4 is ruled out (no BF16). A100 80GB / G4 / H100 are unnecessary and cost more CU.
+Rates: 2026 user reports; verify in Colab → *Runtime → View resources*.
 
-## 2A. Opción CLI (WSL, recomendada para corridas largas)
+## 2A. CLI Option (WSL, Recommended for Long Runs)
 
-Todas las órdenes se lanzan desde WSL en la raíz del proyecto (por ejemplo, `/mnt/c/projects/JEV-LLM`).
+All commands are launched from WSL at the project root (for example, `/mnt/c/projects/JEV-LLM`).
 
 ```bash
-# un notebook por VM (paralelo) -------------------------------------------------
-tools/colab/launch.sh J64 jev-j64 A100            # corrida principal (defaults del formulario)
+# one notebook per VM (parallel) -------------------------------------------------
+tools/colab/launch.sh J64 jev-j64 A100            # main run (form defaults)
 tools/colab/launch.sh B13 jev-b13 A100
 tools/colab/launch.sh G_SINGLE jev-g L4
 # ... (JSTEP, JFINAL, B13_GREEDY)
 
-# o varios notebooks en secuencia en UNA VM (más barato: reutiliza pesos y compilación)
+# or several notebooks sequentially on ONE VM (cheaper: reuses weights and compilation)
 tools/colab/launch_seq.sh jev-a100 A100 "J64 JSTEP JFINAL B13 B13_GREEDY"
-tools/colab/launch_seq.sh jev-a100 A100 "LATENCY"   # estudio de latencia (08)
+tools/colab/launch_seq.sh jev-a100 A100 "LATENCY"   # latency study (08)
 
-# parámetros de papermill: -p NOMBRE VALOR (mismos nombres que el formulario)
+# papermill parameters: -p NAME VALUE (same names as the form)
 tools/colab/launch.sh J64 jev-j64 A100 -p N_PROBLEMS 10 -p RUN_TAG prueba10 -p SEEDS 17,29,43
 
-# monitoreo ----------------------------------------------------------------------
-tools/colab/status.sh jev-j64 J64 30       # proceso vivo, progress.json, últimas 30 líneas, GPU, zips
-tools/colab/seq_status.sh jev-a100         # estado de una secuencia (rc y duración por condición)
+# monitoring ----------------------------------------------------------------------
+tools/colab/status.sh jev-j64 J64 30       # live process, progress.json, last 30 lines, GPU, zips
+tools/colab/seq_status.sh jev-a100         # sequence status (rc and duration per condition)
 
-# descarga (repetible: baja checkpoints a medida que salen) -----------------------
+# download (repeatable: downloads checkpoints as they appear) -----------------------
 tools/colab/pull.sh jev-j64                # -> results/colab/jev-j64/
-# parar -----------------------------------------------------------------------------
-tools/colab/kill_gpu.sh jev-j64            # mata papermill y procesos que ocupan la GPU
-tools/colab/stop.sh jev-j64                # libera la VM (¡descarga antes! /content se borra)
+# stop -----------------------------------------------------------------------------
+tools/colab/kill_gpu.sh jev-j64            # kills papermill and processes using the GPU
+tools/colab/stop.sh jev-j64                # releases the VM (download first! /content is deleted)
 ```
 
-`launch*.sh` crean la sesión si no existe, suben `dist/jev_llm_bundle.zip` y los notebooks a `/content`, los
-descomprimen en `/content/jev_llm` y arrancan **papermill en segundo plano** en la VM (sobrevive a que cierres la
-terminal). Son idempotentes: si la corrida sigue viva, responden `ALREADY RUNNING`.
+`launch*.sh` create the session if it does not exist, upload `dist/jev_llm_bundle.zip` and the notebooks to `/content`,
+unpack them into `/content/jev_llm`, and start **papermill in the background** on the VM (it survives closing the
+terminal). They are idempotent: if the run is still alive, they respond `ALREADY RUNNING`.
 
-### Problemas conocidos del CLI (observados en el smoke)
-* **Conexión frágil** con la VM mientras vLLM compila/carga (ReadTimeout, "Connection was lost"): los scripts usan
-  `tools/colab/_cexec.sh` con 5 reintentos. La corrida en la VM no se ve afectada.
-* **Token del runtime ~1 h:** el CLI 0.7.0 marcó una sesión viva como "perdida" (401) y borró su registro local,
-  dejando la VM huérfana facturando. Actualiza a ≥ 0.7.4 (`uv tool install -U google-colab-cli`). Si vuelve a pasar,
-  `colab sessions` la lista como `[?]`; libérala desde la UI de Colab (*Gestionar sesiones*).
-* **Secreto HF_TOKEN:** fuera de la UI, `huggingface_hub` intenta leer el secreto de Colab y espera un timeout una
-  vez (inofensivo: los modelos son públicos).
-* `colab exec` tiene timeout por defecto de 30 s: usa siempre `--timeout`.
+### Known CLI Issues (Observed in the Smoke Test)
+* **Fragile connection** to the VM while vLLM compiles/loads (ReadTimeout, "Connection was lost"): scripts use
+  `tools/colab/_cexec.sh` with 5 retries. The run on the VM is unaffected.
+* **Runtime token ~1 h:** CLI 0.7.0 marked a live session as "lost" (401) and deleted its local record,
+  leaving an orphaned VM accruing charges. Upgrade to ≥ 0.7.4 (`uv tool install -U google-colab-cli`). If it happens again,
+  `colab sessions` lists it as `[?]`; release it through the Colab UI (*Manage sessions*).
+* **HF_TOKEN secret:** outside the UI, `huggingface_hub` tries to read the Colab secret and waits for a timeout
+  once (harmless: the models are public).
+* `colab exec` has a default timeout of 30 s: always use `--timeout`.
 
-## 2B. Opción UI de Colab
+## 2B. Colab UI Option
 
-1. Sube `dist/jev_llm_bundle.zip` a `/content` (panel de archivos) o déjalo para la celda 3, que lo pide.
-2. Abre el notebook (Archivo → Subir cuaderno) y elige la GPU de la tabla.
-3. Ajusta el formulario (celda 2) y ejecuta todo. Para una prueba: `RUN_TAG="smoke"`, `N_PROBLEMS=1`.
-4. (Opcional) `PERSIST_TO_DRIVE=True` monta Drive y copia cada zip a `DRIVE_DIR`.
-5. Si Colab se desconecta: vuelve a ejecutar desde la celda 3; los casos terminados se saltan (reanudación).
+1. Upload `dist/jev_llm_bundle.zip` to `/content` (files panel), or wait for cell 3, which requests it.
+2. Open the notebook (File → Upload notebook) and select the GPU from the table.
+3. Adjust the form (cell 2) and run all cells. For a test: `RUN_TAG="smoke"`, `N_PROBLEMS=1`.
+4. (Optional) `PERSIST_TO_DRIVE=True` mounts Drive and copies each zip to `DRIVE_DIR`.
+5. If Colab disconnects: rerun from cell 3; completed cases are skipped (resumption).
 
-## 3. Análisis
+## 3. Analysis
 
-1. Descarga todos los `*_final.zip` (y el de `LATENCY`) con `pull.sh` o desde la UI.
-2. En `07_analisis` (CPU): sube `dist/jev_llm_analysis_bundle.zip` y los zips a `/content/jev_llm/incoming/`,
-   fija `RUN_TAG` y ejecuta. Salida: `/content/jev_llm/analysis_<RUN_TAG>.zip` con `report.md`, `final_table.csv`,
+1. Download all `*_final.zip` files (and the `LATENCY` zip) with `pull.sh` or through the UI.
+2. In `07_analisis` (CPU): upload `dist/jev_llm_analysis_bundle.zip` and the zips to `/content/jev_llm/incoming/`,
+   set `RUN_TAG`, and run. Output: `/content/jev_llm/analysis_<RUN_TAG>.zip` with `report.md`, `final_table.csv`,
    `graded_runs.csv`, `categories.csv`, `accuracy_by_domain_difficulty.csv`, `analysis.json`, `figures/`.
-3. Alternativa local: `python -c "import sys; sys.path.insert(0,'src'); from jevlab.analysis import run_analysis; run_analysis('<dir con zips extraídos>', 'data/test_gold.jsonl', 'results/analysis', 'main')"`.
+3. Local alternative (replace the existing directory placeholder with the extracted-zips directory): `python -c "import sys; sys.path.insert(0,'src'); from jevlab.analysis import run_analysis; run_analysis('<extracted-zips-directory>', 'data/test_gold.jsonl', 'results/analysis', 'main')"`.
 
-## 4. Costos observados (smoke, N=1)
+## 4. Observed Costs (Smoke Test, N=1)
 
-Ver `docs/07_smoke_test.md`. Tiempos fijos por notebook en A100: instalación ~3.5 min (primera vez en la VM),
-descarga+verificación de pesos ~2.5 min (G+J) / ~4 min (B), arranque de motores ~3–4 min (menos con caché de
-compilación), preflight completo ~3–4 min. Recomendación: `launch_seq.sh` en una sola A100 para los 5 notebooks de
-A100 y L4 para G_SINGLE; `PREFLIGHT_MODE="light"` a partir del segundo notebook en la misma VM.
+See [smoke test](07_smoke_test.md). Fixed times per notebook on A100: installation ~3.5 min (first time on the VM),
+weight download+verification ~2.5 min (G+J) / ~4 min (B), engine startup ~3–4 min (less with the compilation
+cache), full preflight ~3–4 min. Recommendation: `launch_seq.sh` on a single A100 for the 5 A100 notebooks
+and L4 for G_SINGLE; `PREFLIGHT_MODE="light"` from the second notebook onward on the same VM.

@@ -1,16 +1,16 @@
-# Resultados agregados de la prueba de concepto v3
+# Aggregate v3 Proof-of-Concept Results
 
-Esta carpeta contiene una seleccion publica de los resultados terminados: 500 problemas de test, 6000 casos fisicos de calidad y 1800 mediciones de latencia sobre 100 problemas. El piloto de 50 problemas y 600 casos se analiza separadamente.
+This directory contains a public selection from the completed study: 500 test problems, 6,000 physical quality cases, and 1,800 latency measurements on 100 problems. The separate 50-problem, 600-case pilot is not pooled with the test.
 
-- [Resumen en espanol](resumen_es.md): resultados principales y conclusiones verificadas.
-- [Informe analitico](report.md): metodologia, composicion de la muestra y contrastes.
-- [Tabla de exactitud](final_table.csv): seis brazos fisicos y controles derivados del mismo pool.
-- [Comparacion coprincipal](primary_comparison.json): efectos de calidad y latencia, con intervalos.
-- [Contrastes secundarios](secondary_comparisons.csv): familia fijada con ajuste Holm.
-- [Controles compartidos agregados](shared_controls_summary.csv): voto y rama fija sobre el mismo pool.
+- [Summary](summary.md): principal results and verified conclusions.
+- [Analytical report](report.md): methodology, sample composition, and contrasts.
+- [Accuracy table](final_table.csv): six physical arms and controls derived from the same pool.
+- [Co-primary comparison](primary_comparison.json): quality and latency effects with confidence intervals.
+- [Secondary contrasts](secondary_comparisons.csv): the fixed family with Holm adjustment.
+- [Aggregate shared controls](shared_controls_summary.csv): voting and fixed-branch results from the same pool.
 
-Son agregados numericos y texto de informe. No son un dataset redistribuible, ni contienen predicciones individuales, respuestas de referencia, datos operativos, credenciales, variables de entorno, notebooks ejecutados o pesos.
+These are numerical aggregates and report text, not a redistributable dataset. They contain no individual predictions, reference answers, operational data, credentials, environment-variable values, executed notebooks, or weights.
 
-Las tablas de controles compartidos reutilizan propuestas de JFINAL; **no agregan casos fisicos ni problemas independientes**. Oracle@4 usa gold y no es un metodo desplegable. Los tiempos de corridas de calidad distintas son descriptivos; solo el estudio LATENCY pareado sustenta la comparacion de velocidad.
+Shared-control tables reuse JFINAL proposals and **add neither physical cases nor independent problems**. Oracle@4 uses reference answers and is not deployable. Times from separate quality runs are descriptive; only the paired LATENCY study supports the speed comparison.
 
-Leer [resultados y alcance](../../docs/13_results_v3.md) y [limitaciones y trabajo futuro](../../docs/14_limitations_and_future_work.md) antes de generalizar.
+Read [results and scope](../../docs/13_results_v3.md) and [limitations and future work](../../docs/14_limitations_and_future_work.md) before generalizing.

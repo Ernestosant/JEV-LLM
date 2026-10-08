@@ -1,43 +1,43 @@
-# Implementacion de la tercera ronda
+# Third-Round Implementation
 
-> **Nota de cierre:** esta página conserva la fotografía de preparación anterior al test. La ronda v3 ya terminó: 500 problemas, 6.000 casos de calidad y 1.800 mediciones de latencia, con análisis real y recursos liberados. Ver [resultados finales](13_results_v3.md) y [limitaciones y trabajo futuro](14_limitations_and_future_work.md). Las tareas y límites operativos de esta fotografía histórica no son instrucciones vigentes de publicación o ejecución.
+> **Closing note:** this page preserves the pre-test preparation snapshot. Round v3 is now complete: 500 problems, 6,000 quality cases, and 1,800 latency measurements, with actual analysis and released resources. See [final results](13_results_v3.md) and [limitations and future work](14_limitations_and_future_work.md). The tasks and operational limits in this historical snapshot are not current publication or execution instructions.
 
-## Estado histórico de preparación
+## Historical Preparation Status
 
-Protocolo y software v3 implementados localmente; preparacion y revision de datos en curso. **No hay un test v3 congelado, resultados experimentales v3 ni GPU Colab asignada por esta implementacion.**
+The v3 protocol and software are implemented locally; data preparation and review are in progress. **There is no frozen v3 test, no v3 experimental results, and no Colab GPU allocated by this implementation.**
 
-La tercera ronda esta definida en `protocolo_jev_qwen4b_v3.md` y `config/experiment_v3.json`: 500 test nuevos, 50 piloto adicional, 100 preguntas del test reservadas para latencia, tres semillas y revision exclusivamente agentica. No se modifica la serie historica del archivo `protocolo_jev_qwen_v3.md`.
+The third round is defined in the [v3 protocol](protocols/protocol_jev_qwen4b_v3.md) and `config/experiment_v3.json`: 500 new test problems, 50 additional pilot problems, 100 test questions reserved for latency, three seeds, and agent-only review. The historical series in the [original protocol](protocols/protocol_jev_qwen_original.md) is not modified.
 
-## Implementado
+## Implemented
 
-- Namespace `src/jevlab/v3`, version 0.3.0. El runtime historico conserva 0.2.1 y sus bundles permanecen intactos.
-- Seis condiciones, incluidos 4B greedy y Qwen3.5-9B oficial greedy; tres semillas distintas para los brazos estocasticos y una referencia por pregunta para greedy.
-- Pools de cuatro propuestas durables antes de llamar a J, namespace de semillas separado de la politica y trazas de fallos/terminacion. Los controles de rama 0, pluralidad, uniformidad esperada y oracle reutilizan propuestas sin fingir nueva inferencia o latencia.
-- Limites 2048/8192, maximo 1024 tokens de entrada, estres sintetico cerca de ese maximo y selector cerca de 16k. Validaciones obligatorias aunque un formulario indique light/off; versiones desconocidas fallan cerrado.
-- Estudio de latencia de 1800 solicitudes reales: JFINAL y modelo grande greedy, 100 preguntas, tres semillas y tres repeticiones, recarga exclusiva de fases y costos de carga fuera del cronometro.
-- Analisis por cluster de problema, dos IC co-principales del 97.5%, IC95 descriptivos y cinco contrastes secundarios con bootstrap centrado y Holm. No tratar semillas/repeticiones como preguntas independientes.
-- Notebooks separados en `notebooks/v3/`, un bundle exclusivamente de desarrollo y gates de datos, piloto tecnico, presupuesto y ETA antes de asignar recursos.
-- Operador aislado con guard WS15s/backend20s, polling25s, recuperacion180s, limite4h y cierre confirmado. La confirmatoria requiere autorizacion real ligada a config y piloto; los controles de plan no crean dicha autorizacion.
+- Namespace `src/jevlab/v3`, version 0.3.0. The historical runtime retains 0.2.1, and its bundles remain intact.
+- Six conditions, including 4B greedy and official Qwen3.5-9B greedy; three distinct seeds for stochastic arms and one reference per question for greedy.
+- Durable four-proposal pools before calling J, a seed namespace separate from the policy, and failure/termination traces. Branch 0, plurality, expected uniform selection, and oracle controls reuse proposals without pretending to perform new inference or latency measurements.
+- Limits 2048/8192, maximum 1024 input tokens, synthetic stress near that maximum, and selector near 16k. Mandatory validations even if a form specifies light/off; unknown versions fail closed.
+- Latency study of 1800 actual requests: JFINAL and large-model greedy, 100 questions, three seeds and three repetitions, exclusive phase reloading, and loading costs outside the timer.
+- Problem-cluster analysis, two co-primary 97.5% CIs, descriptive 95% CIs, and five secondary contrasts with centered bootstrap and Holm adjustment. Seeds/repetitions must not be treated as independent questions.
+- Separate notebooks in `notebooks/v3/`, a development-only bundle, and gates for data, technical pilot, budget, and ETA before allocating resources.
+- Isolated operator with WS15s/backend20s guard, polling25s, recovery180s, limit4h, and confirmed shutdown. Confirmatory execution requires actual authorization tied to the config and pilot; plan checks do not create that authorization.
 
-## Preparacion real
+## Actual Preparation
 
-El pool inicial fue ampliado con fuentes naturales y politicas semanticas globales antes de empezar revisiones. No se bajaron las cuotas ni se cambio la semilla. Hay **3422 candidatos provisionales**, cinco familias de fuentes y 137 pares de paquetes ciegos/referencia. Las 550 plazas propuestas tienen capacidad provisional, con 88 candidatos prioritarios de reserva; esto no equivale a 550 preguntas aprobadas.
+The initial pool was expanded with natural sources and global semantic policies before reviews began. Quotas were not lowered, and the seed was not changed. There are **3422 provisional candidates**, five source families, and 137 pairs of blind/reference packages. The 550 proposed slots have provisional capacity, with 88 priority reserve candidates; this does not mean 550 approved questions.
 
-Se excluyen 260 identidades usadas y 113 identidades adicionales de construcciones previas rechazadas. Registro y deduplicacion exacta, aproximada y de variantes numericas quedan en `data/v3/staging/`.
+260 previously used identities and 113 additional identities from previously rejected constructions are excluded. The registry and exact, approximate, and numerical-variant deduplication are stored in `data/v3/staging/`.
 
-Fuentes nuevas adquiridas con revision/hash y licencia: ASDiv oficial (CC BY-NC 4.0) y OpenStax oficial (CC BY-NC-SA 4.0). Estos permisos son para uso no comercial con atribucion y, donde corresponde, ShareAlike; no se asume permiso para explotacion comercial. GSM8K train no fue adquirido ni usado. Las claves/procedencia de competicion heredadas siguen necesitando verificacion, no se presentan automaticamente como oficiales.
+New sources acquired with revision/hash and license: official ASDiv (CC BY-NC 4.0) and official OpenStax (CC BY-NC-SA 4.0). These permissions cover noncommercial use with attribution and, where applicable, ShareAlike; permission for commercial use is not assumed. GSM8K train was neither acquired nor used. Inherited competition keys/provenance still require verification and are not automatically presented as official.
 
-## Revision efectuada
+## Review Performed
 
-Primeros cuatro paquetes: **100 candidatos** revisados por ocho ejecuciones reales de agentes, dos por paquete. Cada agente resolvio a ciegas, preservo su salida y luego comparo la referencia sin cambiar la respuesta ciega. Se registraron 400 eventos: 200 soluciones ciegas y 200 comparaciones.
+First four packages: **100 candidates** reviewed through eight actual agent runs, two per package. Each agent solved the problems blind, preserved its output, and then compared the reference without changing the blind answer. 400 events were recorded: 200 blind solutions and 200 comparisons.
 
-Resultado bajo el contrato actual: **12 candidatos con doble aprobacion; 88 vetados**. Entre 82 rechazados por ambos hay 70 discrepancias de clasificacion y ocho desacuerdos de gold; los grupos se solapan. Otros seis tienen veto unilateral. Hay ademas casos no resueltos o con dudas de unidad. Estos datos NO prueban que 88 respuestas fuente sean erroneas: muchas discrepancias son de dominio o dificultad provisional.
+Result under the current contract: **12 candidates with dual approval; 88 vetoed**. Among the 82 rejected by both reviewers, there are 70 classification discrepancies and eight gold disagreements; the groups overlap. Another six have a unilateral veto. There are also unresolved cases or cases with unit uncertainty. These data do NOT prove that 88 source answers are wrong: many discrepancies concern domain or provisional difficulty.
 
-Todos los dictamenes y sus identidades/hashes se preservan en `data/v3/staging/reviews/`; el contador vigente es `review_progress.json`. No se convierten falsos en verdaderos ni se rellenan soluciones para satisfacer un validador. La publicacion sigue bloqueada hasta 550 aprobaciones reales en las cuotas exactas. Adjudicar desacuerdos y/o revisar reservas es trabajo pendiente; no corresponde corregir etiquetas selectivamente para llenar cupos.
+All verdicts and their identities/hashes are preserved in `data/v3/staging/reviews/`; the current counter is `review_progress.json`. False values are not changed to true, nor are solutions filled in to satisfy a validator. Publication remains blocked until 550 actual approvals meet the exact quotas. Adjudicating disagreements and/or reviewing reserves remains pending; selectively correcting labels to fill quotas is not appropriate.
 
-`data/v3/PREPARATION_REPORT.md` es la fotografia de la preparacion anterior a las revisiones. El estado posterior se consulta en el registro de revision, no se modifica retrospectivamente la preparacion sellada.
+`data/v3/PREPARATION_REPORT.md` is the preparation snapshot from before the reviews. The later status is available in the review registry; the sealed preparation is not modified retrospectively.
 
-## Comandos locales
+## Local Commands
 
 ```powershell
 python -B tools/build_notebooks_v3.py
@@ -46,23 +46,23 @@ python -B tools/colab/run_v3.py --plan --phase test
 python -B -m pytest tests -q -p no:cacheprovider
 ```
 
-El plan es offline y devuelve `blocked_dataset_review`. El bundle de desarrollo no contiene gold, test, piloto ni evidencia privada de los revisores. El constructor de bundles completos y el runtime no fabrican un sello de datos para sortear el bloqueo.
+The plan is offline and returns `blocked_dataset_review`. The development bundle contains no gold, test, pilot, or private reviewer evidence. The full-bundle builder and runtime do not fabricate a data seal to bypass the block.
 
-Verificacion local final de esta etapa: **1023 tests pasados**, cero fallos y 13 avisos de deprecacion existentes en el analisis Matplotlib historico. Los notebooks se regeneraron y el bundle dev se verifico tras fijar el hash del contrato de revision en la configuracion. Los tests usan motores/backends falsos; no prueban memoria o exactitud en CUDA real. Estado estructurado: `results/v3/implementation_status.json`.
+Final local verification for this stage: **1023 tests passed**, zero failures, and 13 existing deprecation warnings in the historical Matplotlib analysis. Notebooks were regenerated, and the dev bundle was verified after pinning the review-contract hash in the configuration. The tests use fake engines/backends; they do not test memory or accuracy on actual CUDA. Structured status: `results/v3/implementation_status.json`.
 
-Para registrar una revision realmente emitida:
+To register an actually issued review:
 
 ```powershell
 python -B tools/submit_reviews_v3.py --help
 ```
 
-El registrador adjunta solo los hashes permitidos por el contrato, conserva todos los veredictos y comprueba idempotencia. No debe asignarse un ID ficticio de agente a una salida generada por otro procedimiento.
+The registrar attaches only the hashes allowed by the contract, preserves all verdicts, and checks idempotency. A fictitious agent ID must not be assigned to output generated by another procedure.
 
-## Pendiente
+## Pending
 
-1. Adjudicar discrepancias con evidencia y continuar revisando candidatos de reserva. Si las cuotas revisadas quedan cortas, planificar nuevas fuentes sin alterar datos previos ni resultados.
-2. Completar y sellar exactamente 500 test, 50 piloto y 100 IDs de latencia, con politica y procedencia verificadas.
-3. Construir bundles completos y volver a validar cobertura, politica, hashes y ausencia de gold.
-4. Ejecutar smoke y piloto tecnico en Colab; CUDA real, memoria y equivalencia nativa v3 todavia no estan medidos.
-5. Presentar presupuesto y particionamiento/ETA al usuario. No lanzar confirmatoria automaticamente por obtener go tecnico.
-6. Ejecutar, analizar y auditar solo tras esa autorizacion, manteniendo maximo dos VMs y cierre confirmado.
+1. Adjudicate discrepancies with evidence and continue reviewing reserve candidates. If reviewed quotas fall short, plan new sources without altering previous data or results.
+2. Complete and seal exactly 500 test problems, 50 pilot problems, and 100 latency IDs, with verified policy and provenance.
+3. Build full bundles and revalidate coverage, policy, hashes, and absence of gold.
+4. Run smoke tests and the technical pilot in Colab; actual CUDA, memory, and native v3 equivalence have not yet been measured.
+5. Present the budget and partitioning/ETA to the user. Do not launch confirmatory execution automatically upon receiving a technical go.
+6. Execute, analyze, and audit only after that authorization, maintaining a maximum of two VMs and confirmed shutdown.

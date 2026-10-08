@@ -1,57 +1,59 @@
-# Serie v2: ejecucion y recuperacion
+# Legacy v2 Series: Execution and Recovery
 
-El protocolo vigente es `../protocolo_jev_qwen4b_v2.md`, incluida la enmienda de recarga por fase del apartado 8.1. El estado real se consulta en `results/v2/coordinator_reload_state.json`; este documento no sustituye los registros de ejecucion.
+This document records the v2 execution procedure and historical evidence, not new v3 results.
 
-## Archivos congelados
+The protocol applicable to this v2 series is [protocol_jev_qwen4b_v2.md](protocols/protocol_jev_qwen4b_v2.md), including the per-phase reload amendment in Section 8.1. Consult `results/v2/coordinator_reload_state.json` for actual state; this document does not replace execution records.
 
-- Test nuevo: 100 problemas; piloto: 40; desarrollo: 20 reutilizados. Semilla de construccion 20261001, semilla de inferencia 17. `data/v2/SHA256SUMS` sella los archivos.
-- Configuracion vigente: `config/experiment_v2_reload.json`, codigo 0.2.1, BF16, A100 de 40 GB, una copia del generador Qwen3.5-4B y cuatro peticiones independientes por ronda hibrida.
-- Notebooks: `notebooks/v2-reload/`; bundles: `dist/v2-reload/`. Inferencia sin gold; analisis separado con gold.
-- `config/experiment_v2.json`, `notebooks/v2/`, `dist/v2/` y los resultados de 0.2.0 permanecen como evidencia historica. No se regeneran ni se reanudan bajo el codigo nuevo.
-- Revision humana omitida por autorizacion del usuario: `reviewed=false`. No presentar los datos como revisados.
+## Frozen Files
 
-## Continuidad
+- New test: 100 problems; pilot: 40; development: 20 reused. Construction seed 20261001, inference seed 17. `data/v2/SHA256SUMS` seals the files.
+- Applicable configuration: `config/experiment_v2_reload.json`, code 0.2.1, BF16, 40 GB A100, one copy of the Qwen3.5-4B generator and four independent requests per hybrid round.
+- Notebooks: `notebooks/v2-reload/`; bundles: `dist/v2-reload/`. Inference without gold; separate analysis with gold.
+- `config/experiment_v2.json`, `notebooks/v2/`, `dist/v2/` and the 0.2.0 results remain historical evidence. They are neither regenerated nor resumed under the new code.
+- Human review omitted with user authorization: `reviewed=false`. Do not present the data as reviewed.
 
-Cada VM tiene configuracion de CLI, wrapper ejecutable, operador duradero y guard propios. El guard mantiene WebSocket cada 15 s y consulta la asignacion cada 20 s. El operador sondea cada 25 s, descarga checkpoints durante la corrida, ejecuta controles de progreso y limita la VM a cuatro horas.
+## Continuity
 
-Un error de transporte no prueba que el notebook haya muerto. La recuperacion del guard esta acotada a 180 s; no reinicia el kernel ni la inferencia. El cierre solo se considera completo tras confirmar la ausencia del endpoint en el servidor.
+Each VM has its own CLI configuration, executable wrapper, durable operator and guard. The guard maintains WebSocket every 15 s and checks the assignment every 20 s. The operator polls every 25 s, downloads checkpoints during the run, performs progress checks and limits the VM to four hours.
 
-El coordinador se ejecuta en un proceso WSL independiente del terminal del agente, con limite global de 12 horas y dos asignaciones como maximo. Las asignaciones ajenas consumen capacidad, pero nunca se detienen. Un proceso anfitrion WSL evita el cierre prematuro de sus hijos durante el arranque.
+A transport error does not prove that the notebook has died. Guard recovery is bounded to 180 s; it does not restart the kernel or inference. Shutdown is considered complete only after confirming the endpoint's absence on the server.
 
-No cerrar WSL, suspender el equipo ni modificar codigo, datos o bundles mientras haya trabajo activo. Los pings no garantizan inmunidad a una revocacion del servicio, perdida de red o apagado local.
+The coordinator runs in a WSL process independent of the agent's terminal, with a global limit of 12 hours and at most two assignments. Other assignments consume capacity but are never stopped. A WSL host process prevents premature shutdown of its children during startup.
 
-## Secuencia
+Do not close WSL, suspend the computer or modify code, data or bundles while work is active. Pings do not guarantee immunity to service revocation, network loss or local shutdown.
 
-1. Revalidar evidencia historica de desarrollo: tres hibridos, 4B solo y diagnostico 0.8B en A100. No repetir esas inferencias.
-2. Repetir solamente la latencia minima que fallo: 2 preguntas de desarrollo y 4 sinteticas, 36 mediciones. Cerrar completamente B antes de cargar G4+J, y viceversa. Cargas, probes y recalentamiento fuera de `T_total`.
-3. Piloto: seleccion entre soluciones completas y modelo grande con muestreo, 40 casos cada uno; despues 4B solo, 40 casos.
-4. Aplicar `tools/pilot_decision.py` con la configuracion vigente. No-go detiene el experimento. No autoriza cambios de prompt, semillas, pesos o presupuestos.
-5. Solo con go: confirmatoria en pares [grande con muestreo, grande greedy], [4B solo, seleccion por bloques], [seleccion por pasos, seleccion final]. Cien casos por brazo.
-6. Latencia completa: una A100, 192 filas, con recargas fuera del cronometro. Analisis CPU con exactamente siete ZIP finales; auditoria independiente.
+## Sequence
 
-## Comprobar y recuperar
+1. Revalidate historical development evidence: three hybrids, 4B alone and the 0.8B diagnostic on A100. Do not repeat those inferences.
+2. Repeat only the failed minimal latency run: 2 development questions and 4 synthetic ones, 36 measurements. Fully shut down B before loading G4+J, and vice versa. Loading, probes and rewarming are outside `T_total`.
+3. Pilot: selection among complete solutions and the large model with sampling, 40 cases each; then 4B alone, 40 cases.
+4. Apply `tools/pilot_decision.py` with the applicable configuration. No-go stops the experiment. It does not authorize changes to prompts, seeds, weights or budgets.
+5. Only with go: confirmatory runs in pairs [large model with sampling, large model greedy], [4B alone, block selection], [stepwise selection, final selection]. One hundred cases per arm.
+6. Full latency: one A100, 192 rows, with reloads outside the timer. CPU analysis with exactly seven final ZIPs; independent audit.
+
+## Check and Recover
 
 ```powershell
-# Solo lectura: asignaciones reales del servidor.
+# Read-only: actual server assignments.
 wsl -e colab sessions
 ```
 
-Consultar primero `coordinator_reload_state.json`, `coordinator_reload_events.jsonl` y el `status.json` del job. El estado distingue ejecucion, verificacion y liberacion. Cada job conserva `execution_handover.json`, logs, checkpoints, ZIP finales y notebook ejecutado.
+First consult `coordinator_reload_state.json`, `coordinator_reload_events.jsonl` and the job's `status.json`. State distinguishes execution, verification and release. Each job preserves `execution_handover.json`, logs, checkpoints, final ZIPs and the executed notebook.
 
-El comando siguiente solo inspecciona la preparacion; no asigna VMs:
+The following command only inspects preparation; it does not assign VMs:
 
 ```bash
 python3 tools/colab/run_v2.py --plan --amend-latency-reload
 ```
 
-No lanzar un segundo coordinador mientras el existente este vivo. Una recuperacion usa `--run --amend-latency-reload`, los mismos archivos de estado y sus pruebas de propiedad; no sustituye trabajos fallidos ni repite inferencia para mejorar resultados. Si aparece una entrega ambigua, revisar el proceso y la asignacion antes de decidir cualquier accion.
+Do not launch a second coordinator while the existing one is alive. Recovery uses `--run --amend-latency-reload`, the same state files and their ownership proofs; it neither replaces failed jobs nor repeats inference to improve results. If an ambiguous handover appears, inspect the process and assignment before deciding on any action.
 
-## Incidentes conservados
+## Preserved Incidents
 
-- `results/v2/preparation/`: candidato inicial rechazado por filtro monetario incompleto y candidato rechazado por cambio no autorizado de semilla. La seleccion final usa la semilla original.
-- `results/v2/smoke/hybrid/`: tres notebooks completados, verificados y liberados. Estres observado de 36.12 GiB, entrada J de 16,330 tokens; acuerdo graph/eager 1.0 en tres prompts iniciales.
-- `results/v2/smoke/single_lat/`: 4B solo completado y verificado por `gsingle_verification.json`; el operador combinado sigue marcado como fallido por el OOM posterior de latencia. No se ha fabricado una finalizacion exitosa de la secuencia.
-- `results/v2/smoke/diagnostic_08b/`: diagnostico de desarrollo terminado; no se usa para conclusiones de calidad.
-- El OOM de latencia no fue una desconexion: B dormido retenia 2.83 GiB y G no podia reservar sus 3 GiB de KV. La nueva configuracion mantiene las mismas caches y cambia exclusivamente la gestion de residencia entre fases.
+- `results/v2/preparation/`: initial candidate rejected because of an incomplete monetary filter, and a candidate rejected because of an unauthorized seed change. The final selection uses the original seed.
+- `results/v2/smoke/hybrid/`: three notebooks completed, verified and released. Observed stress of 36.12 GiB, J input of 16,330 tokens; graph/eager agreement 1.0 on three initial prompts.
+- `results/v2/smoke/single_lat/`: 4B alone completed and verified by `gsingle_verification.json`; the combined operator remains marked as failed because of the subsequent latency OOM. Successful completion of the sequence has not been fabricated.
+- `results/v2/smoke/diagnostic_08b/`: development diagnostic completed; not used for quality conclusions.
+- The latency OOM was not a disconnection: sleeping B retained 2.83 GiB and G could not reserve its 3 GiB of KV. The new configuration keeps the same caches and changes only residency management between phases.
 
-Los tiempos de recarga se publican aparte. La latencia medida es condicional a motores cargados y calientes, no el costo extremo a extremo de intercambiar modelos. Las CU y el costo monetario no se inventan: las estimaciones operativas identifican explicitamente cuando solo se dispone de tiempo observado.
+Reload times are published separately. Measured latency is conditional on loaded, warm engines, not the end-to-end cost of swapping models. CU and monetary costs are not invented: operational estimates explicitly identify when only observed time is available.

@@ -1,17 +1,19 @@
-# Resultados Del Perfil Minimo
+# Legacy Minimal-Profile Results
 
-Ejecuciones completadas 2026-09-29/30: 100 problemas congelados, semilla 17, seis
-condiciones (600 ejecuciones). Modelos/prompts/presupuestos sin cambios, codigo 0.1.2,
-perfil SHARED4-VLLM-GRAPH de la enmienda v3.1. No es una ejecucion R4 de cuatro copias
-fisicas. Revision humana del dataset y del razonamiento todavia pendiente.
+These are results from the earlier experiment, not new Qwen4B v3 results.
 
-## Calidad
+Runs completed on 2026-09-29/30: 100 frozen problems, seed 17, six
+conditions (600 runs). Models/prompts/budgets unchanged, code 0.1.2,
+SHARED4-VLLM-GRAPH profile from amendment v3.1. This is not an R4 run with four physical
+copies. Human review of the dataset and reasoning is still pending.
 
-Correccion offline independiente de la inferencia: exactamente una linea FINAL,
-gramatica numerica estricta y comparacion racional exacta. Truncamientos, EOS sin
-FINAL y limites de rondas cuentan como incorrectos; ninguno fue excluido.
+## Quality
 
-| Condicion | Aciertos/100 | IC95 de exactitud | Formato valido |
+Offline grading independent of inference: exactly one FINAL line,
+strict numeric grammar and exact rational comparison. Truncations, EOS without
+FINAL and round limits count as incorrect; none were excluded.
+
+| Condition | Correct/100 | Accuracy CI95 | Valid format |
 |---|---:|---|---:|
 | G_SINGLE | 7 | [3, 12] % | 18 % |
 | B13 | 73 | [64, 81] % | 94 % |
@@ -20,24 +22,24 @@ FINAL y limites de rondas cuentan como incorrectos; ninguno fue excluido.
 | JSTEP | 22 | [14, 30] % | 34 % |
 | JFINAL | 22 | [15, 30] % | 36 % |
 
-Bootstrap pareado por problema, estratificado por dominio, 10,000 remuestreos,
-semilla 271828. Diferencias de exactitud frente a B13, con IC99.1667 ajustado:
+Paired bootstrap by problem, stratified by domain, 10,000 resamples,
+seed 271828. Accuracy differences vs B13, with adjusted CI99.1667:
 
-- J64: -56 puntos porcentuales; intervalo [-69, -42].
-- JSTEP: -51 puntos porcentuales; intervalo [-64, -37].
-- JFINAL: -51 puntos porcentuales; intervalo [-64, -38].
+- J64: -56 percentage points; interval [-69, -42].
+- JSTEP: -51 percentage points; interval [-64, -37].
+- JFINAL: -51 percentage points; interval [-64, -38].
 
-Estos resultados no respaldan mayor exactitud de los hibridos frente a B13. Las
-mejoras puntuales frente a G_SINGLE no eliminan esa brecha. B13_GREEDY es un control
-secundario; no se escogio el mejor baseline por problema.
+These results do not support higher hybrid accuracy vs B13. The
+point-estimate improvements vs G_SINGLE do not eliminate that gap. B13_GREEDY is a secondary
+control; the best baseline was not selected per problem.
 
-## Latencia
+## Latency
 
-Notebook 08: 32 entradas distintas del test (20 dev y 12 sinteticas), seis condiciones,
-192 mediciones en una sola A100, orden contrabalanceado e intercambios fuera del timer.
-Las latencias de 01-06, obtenidas en VMs distintas, permanecen descriptivas.
+Notebook 08: 32 inputs separate from the test (20 dev and 12 synthetic), six conditions,
+192 measurements on a single A100, counterbalanced order and swaps outside the timer.
+Latencies from 01-06, obtained on different VMs, remain descriptive.
 
-| Condicion | Mediana en 08 (s) | Ratio de medianas B13/metodo |
+| Condition | Median in 08 (s) | Ratio of medians B13/method |
 |---|---:|---:|
 | B13 | 2.502 | 1.00 |
 | B13_GREEDY | 2.491 | 1.00 |
@@ -46,53 +48,53 @@ Las latencias de 01-06, obtenidas en VMs distintas, permanecen descriptivas.
 | JSTEP | 2.907 | 0.86 |
 | JFINAL | 3.507 | 0.71 |
 
-J64 ratio 2.55: IC95 [1.49, 5.70], IC99.1667 [1.26, 7.85]. JSTEP y JFINAL tienen
-intervalos que cruzan 1. Estos tiempos incluyen terminaciones invalidas: en 08 B13
-termino con estado final en 32/32 entradas, J64 en 22/32, JSTEP en 19/32 y JFINAL en
-19/32. No interpretar la terminacion rapida de fallos como mayor capacidad ni inferir
-una ventaja conjunta de calidad/latencia sobre el test usando otra distribucion de
-preguntas. Ningun hibrido demuestra aqui ser mas preciso y mas rapido que B13.
+J64 ratio 2.55: CI95 [1.49, 5.70], CI99.1667 [1.26, 7.85]. JSTEP and JFINAL have
+intervals that cross 1. These times include invalid terminations: in 08 B13
+ended with status final on 32/32 inputs, J64 on 22/32, JSTEP on 19/32 and JFINAL on
+19/32. Do not interpret fast failure termination as greater capability or infer
+a joint quality/latency advantage on the test using a different distribution of
+questions. No hybrid here demonstrates being both more accurate and faster than B13.
 
-## Diagnostico JFINAL
+## JFINAL Diagnostics
 
-400 candidatos guardados, 100 decisiones:
+400 saved candidates, 100 decisions:
 
-- Seleccion de J: 22 % de aciertos.
-- Seleccion uniforme esperada: 9.5 %.
-- Mayoria offline de respuestas normalizadas: 25 %.
-- Oracle@4: 26 % (techo de este conjunto, no un sistema realizable).
-- Brecha del selector: 4 puntos porcentuales.
-- Eleccion correcta condicionada a existir un candidato correcto: 84.62 %.
+- J selection: 22 % correct.
+- Expected uniform selection: 9.5 %.
+- Offline majority of normalized answers: 25 %.
+- Oracle@4: 26 % (ceiling for this set, not a realizable system).
+- Selector gap: 4 percentage points.
+- Correct choice conditional on a correct candidate existing: 84.62 %.
 
-La ausencia de propuestas correctas/formateadas limita considerablemente este brazo;
-ni el oracle de sus cuatro propuestas alcanza B13. Mayoria y oracle son diagnosticos
-offline, sin latencia de un sistema de consenso ejecutado.
+The lack of correct/formatted proposals substantially limits this arm;
+even the oracle over its four proposals does not reach B13. Majority and oracle are offline
+diagnostics, without latency from an executed consensus system.
 
-## Auditoria Y Limitaciones
+## Audit and Limitations
 
-- Los siete ZIP finales pasaron integridad y las comprobaciones de IDs, semillas,
-  configuraciones, hashes de entradas, modelos y version. Sin duplicados de checkpoints.
-- Una segunda implementacion del parser recompuso los 600 aciertos desde predicciones
-  inmutables y gold: cero discrepancias con graded_runs.csv.
-- JFINAL: cuatro probabilidades finitas que suman 1 y mapeo argmax/permutacion correcto
-  en 100/100 decisiones; cero candidatos parseables pero no terminales en el diagnostico.
-- G_SINGLE tuvo una advertencia no bloqueante eager_vs_graph (coincidencia greedy 0.427):
-  no se declara equivalencia de perfiles. No hubo ajuste o reejecucion por calidad.
-- Los benchmarks son publicos, posible contaminacion; dificultad heuristica y reviewed=false.
-- Una sola semilla y corpus de 100 problemas; no generalizar a otras tripletas ni modelos.
-- SHARED4 usa una copia G: memoria real P_G+P_J, no cuatro replicas almacenadas. Entrenamiento
-  diferente, baseline ampliado por terceros, perfil sin pensamiento y kernels vLLM.
-- Fallos de operadores de cierre/monitoreo se recuperaron sin cambiar inferencias;
-  falso fallo de auditoria de 08 corregido comparando IDs como conjunto, no orden barajado.
-- Todas las VMs y guards fueron cerrados; se verifico ausencia de asignaciones en el servidor.
+- The seven final ZIPs passed integrity and checks of IDs, seeds,
+  configurations, input hashes, models and version. No duplicate checkpoints.
+- A second parser implementation reconstructed all 600 correctness outcomes from immutable
+  predictions and gold: zero discrepancies with graded_runs.csv.
+- JFINAL: four finite probabilities summing to 1 and correct argmax/permutation mapping
+  in 100/100 decisions; zero parseable but nonterminal candidates in the diagnostic.
+- G_SINGLE had a nonblocking eager_vs_graph warning (greedy agreement 0.427):
+  profile equivalence is not claimed. No tuning or rerun for quality occurred.
+- Public benchmarks, possible contamination; heuristic difficulty and reviewed=false.
+- One seed and a corpus of 100 problems; do not generalize to other triplets or models.
+- SHARED4 uses one G copy: actual memory P_G+P_J, not four stored replicas. Different
+  training, baseline expanded by third parties, non-thinking profile and vLLM kernels.
+- Shutdown/monitoring operator failures were recovered without changing inference;
+  a false audit failure in 08 was corrected by comparing IDs as a set, not in shuffled order.
+- All VMs and guards were shut down; absence of server assignments was verified.
 
-## Artefactos
+## Artifacts
 
-- results/first_two_20260929/: 01_G_SINGLE y 02_B13, con intento fallido HF429 conservado.
-- results/remaining_batches_20260929/03_B13_GREEDY/ a 06_JFINAL/: lotes restantes.
-- results/remaining_batches_20260929/08_LATENCY/: plan, 192 mediciones, swaps, logs y notebook.
-- results/remaining_batches_20260929/collected/: solamente siete ZIP finales verificados.
-- results/remaining_batches_20260929/07_ANALYSIS/artifacts/: ZIP de analisis y notebook ejecutado.
-- results/remaining_batches_20260929/07_ANALYSIS/extracted/: report.md, tablas CSV,
-  graded_runs.csv, analysis.json y figuras.
-- results/remaining_batches_20260929/analysis_independent_audit.json: recorreccion independiente.
+- results/first_two_20260929/: 01_G_SINGLE and 02_B13, with the failed HF429 attempt preserved.
+- results/remaining_batches_20260929/03_B13_GREEDY/ through 06_JFINAL/: remaining batches.
+- results/remaining_batches_20260929/08_LATENCY/: plan, 192 measurements, swaps, logs and notebook.
+- results/remaining_batches_20260929/collected/: only seven verified final ZIPs.
+- results/remaining_batches_20260929/07_ANALYSIS/artifacts/: analysis ZIP and executed notebook.
+- results/remaining_batches_20260929/07_ANALYSIS/extracted/: report.md, CSV tables,
+  graded_runs.csv, analysis.json and figures.
+- results/remaining_batches_20260929/analysis_independent_audit.json: independent regrading.

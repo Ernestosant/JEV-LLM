@@ -1,44 +1,46 @@
-# Supervision Y Cierre De Colab
+# Colab Supervision and Shutdown
 
-El ciclo de vida es independiente del monitoreo experimental a los 2/5/10/30 minutos.
+This document records the legacy lifecycle procedure and its 2026-09-29 verification, not new Qwen4B v3 results.
 
-- Pings WebSocket: cada 15 segundos, conectando SOLO al kernel existente del CLI.
-- Comprobacion de la asignacion en el servidor: cada 20 segundos, con timeout de red.
-- Renovacion de conexion con credenciales de proxy actualizadas: antes de los 50 minutos.
-- Cancelacion del guard: comprobada cada segundo mientras espera el siguiente control.
-- Cierre: unassign de la asignacion exacta, seguido de list_assignments para confirmar su
-  ausencia. Hasta tres intentos limitados; una respuesta de red fallida NO demuestra cierre.
-- Registro: results/lifecycle/<SESSION>/session_lifecycle.jsonl, sin tokens ni credenciales.
+The lifecycle is independent of experimental monitoring at 2/5/10/30 minutes.
 
-## Uso
+- WebSocket pings: every 15 seconds, connecting ONLY to the existing CLI kernel.
+- Server assignment check: every 20 seconds, with a network timeout.
+- Connection renewal with updated proxy credentials: before 50 minutes.
+- Guard cancellation: checked every second while waiting for the next check.
+- Shutdown: unassign the exact assignment, then list_assignments to confirm its
+  absence. Up to three bounded attempts; a failed network response does NOT prove shutdown.
+- Log: results/lifecycle/<SESSION>/session_lifecycle.jsonl, without tokens or credentials.
 
-Los scripts launch.sh y launch_seq.sh inician el guard antes de subir/ejecutar el notebook.
-stop.sh libera la VM y comprueba el servidor. Si una VM nueva falla durante el lanzamiento,
-un trap intenta liberarla; si no puede confirmar el cierre, devuelve error y una advertencia.
+## Usage
 
-Para herramientas que aislan el estado del CLI, exporta COLAB_SESSION_CONFIG con la misma
-ruta que usa tu ejecutable wrapper. El valor por defecto es ~/.config/colab-cli/sessions.json.
-COLAB_PYTHON permite indicar el Python del entorno donde esta instalado el CLI.
+The launch.sh and launch_seq.sh scripts start the guard before uploading/running the notebook.
+stop.sh releases the VM and checks the server. If a new VM fails during launch,
+a trap attempts to release it; if it cannot confirm shutdown, it returns an error and a warning.
 
-No se crean kernels de repuesto ni se ejecutan celdas ficticias para mantener actividad.
-El guard espera hasta que el lanzamiento haya creado el kernel del CLI, comprueba la
-asignacion y conserva su conexion. No garantiza disponibilidad ni evita cuotas o limites
-de Colab. Un fallo de ping/observacion se registra como estado desconocido.
+For tools that isolate CLI state, export COLAB_SESSION_CONFIG with the same
+path used by your wrapper executable. The default is ~/.config/colab-cli/sessions.json.
+COLAB_PYTHON specifies the Python from the environment where the CLI is installed.
 
-## Verificacion Real
+No spare kernels are created and no dummy cells are executed to maintain activity.
+The guard waits until launch has created the CLI kernel, checks the
+assignment and maintains its connection. It does not guarantee availability or bypass Colab
+quotas or limits. A failed ping/observation is logged as an unknown state.
 
-Prueba de integracion 2026-09-29 en una VM temporal CPU, sin modelos:
+## Actual Verification
 
-- Conexion WebSocket confirmada y cinco observaciones de salud espaciadas 20 segundos.
-- Pings configurados a 15 segundos en el cliente WebSocket instalado.
-- Cancelacion a las 22:34:13 UTC; guard detenido a las 22:34:14 UTC.
-- Asignacion ausente confirmada en el primer intento, a las 22:34:14 UTC.
-- Proceso del guard ausente y listado global de sesiones vacio despues del cierre.
-- Evidencia: results/first_two_20260929/guard_check/session_lifecycle.jsonl.
+Integration test on 2026-09-29 on a temporary CPU VM, without models:
 
-El primer intento de usar el endpoint HTTP TFE keep-alive devolvio HTTP400 en esta cuenta;
-se descarto esa implementacion y se verifico la conexion WebSocket del CLI. No se presenta
-ese intento como un keep-alive satisfactorio.
+- WebSocket connection confirmed and five health observations spaced 20 seconds apart.
+- Pings configured at 15 seconds in the installed WebSocket client.
+- Cancellation at 22:34:13 UTC; guard stopped at 22:34:14 UTC.
+- Assignment absence confirmed on the first attempt, at 22:34:14 UTC.
+- Guard process absent and global session list empty after shutdown.
+- Evidence: results/first_two_20260929/guard_check/session_lifecycle.jsonl.
 
-Los experimentos G_SINGLE/B13 ya habian terminado y sus VMs estaban liberadas antes de
-la prueba de integracion del nuevo guard; no se alteraron ni se repitieron sus resultados.
+The first attempt to use the HTTP TFE keep-alive endpoint returned HTTP400 on this account;
+that implementation was discarded and the CLI WebSocket connection was verified. That attempt
+is not presented as a successful keep-alive.
+
+The G_SINGLE/B13 experiments had already finished and their VMs had been released before
+the new guard's integration test; their results were neither changed nor repeated.
